@@ -1,0 +1,257 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// TeamPay.ar — Schema de dominio (Prisma 7)
+//
+// ⚠️  Prisma 7: la URL de conexión NO va aquí.
+//     CLI  → prisma.config.ts  (lee DATABASE_URL via dotenv)
+//     Runtime → src/lib/prisma.ts  (PrismaPg adapter)
+//
+// Convenciones:
+//   • Modelos en inglés (compatibilidad NextAuth + TS idiomático)
+//   • Enums en SCREAMING_SNAKE_CASE español (ACTIVA, PENDIENTE, etc.)
+//   • Montos en Decimal(12,2) — nunca Float
+//   • Toda tabla tiene createdAt / updatedAt
+//   • Migraciones: npx prisma migrate dev --name "descripcion-corta"
+// ─────────────────────────────────────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// ENUMS
+// ═════════════════════════════════════════════════════════════════════════════
+
+/// Rol global del usuario en la aplicación.
+/// La capitana de un equipo es quien tiene ownerId en Team.
+enum UserRole {
+  CAPITANA
+  JUGADORA
+}
+
+/// Estado de la jugadora dentro de un equipo.
+enum TeamMemberStatus {
+  ACTIVA
+  INACTIVA
+}
+
+/// Tipo de evento que genera obligación de pago.
+enum EventType {
+  CUOTA     // Cuota mensual
+  AMISTOSO  // Partido amistoso
+  TORNEO    // Torneo o copa
+  OTRO      // Cualquier otro evento con costo
+}
+
+/// Estado del pago de una jugadora para un evento específico.
+enum ParticipantStatus {
+  PENDIENTE // No pagó todavía
+  PAGO      // Pagó
+  EXIMIDA   // La capitana la eximió del pago
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// AUTH.JS — Modelos requeridos por @auth/prisma-adapter v2
+// Referencia: https://authjs.dev/getting-started/adapters/prisma
+// ═════════════════════════════════════════════════════════════════════════════
+
+/// Usuario de la aplicación. Base del modelo NextAuth, extendido con rol.
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  role          UserRole  @default(JUGADORA)
+
+  // ── Auth.js relations ──────────────────────────────────────────
+  accounts Account[]
+  sessions Session[]
+
+  // ── Domain relations ───────────────────────────────────────────
+  /// Equipos donde este usuario es capitana (owner)
+  ownedTeams        Team[]       @relation("TeamOwner")
+  /// Perfiles de jugadora vinculados a este usuario (uno por equipo)
+  teamMemberships   TeamMember[]
+  /// Pagos que este usuario confirmó/registró
+  confirmedPayments Payment[]    @relation("PaymentConfirmedBy")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// DOMAIN — Modelos de negocio
+// ═════════════════════════════════════════════════════════════════════════════
+
+// ── Team (Equipo) ─────────────────────────────────────────────────────────────
+
+/// Equipo de fútbol. La capitana es el User referenciado por ownerId.
+model Team {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  ownerId     String
+
+  owner    User         @relation("TeamOwner", fields: [ownerId], references: [id])
+  members  TeamMember[]
+  events   Event[]
+  expenses Expense[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ── TeamMember (Jugadora) ─────────────────────────────────────────────────────
+
+/// Perfil de una jugadora dentro de un equipo.
+/// userId es null si la jugadora aún no se registró en la app.
+model TeamMember {
+  id     String           @id @default(cuid())
+  teamId String
+  name   String
+  status TeamMemberStatus @default(ACTIVA)
+  /// Vinculación opcional con un User registrado
+  userId String?
+
+  team                Team               @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user                User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  eventParticipations EventParticipant[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([teamId])
+  @@index([userId])
+}
+
+// ── Event (Evento) ────────────────────────────────────────────────────────────
+
+/// Evento que genera obligación de pago para las jugadoras del equipo.
+model Event {
+  id              String    @id @default(cuid())
+  teamId          String
+  name            String
+  type            EventType
+  /// Monto que debe pagar cada jugadora participante
+  amountPerPlayer Decimal   @db.Decimal(12, 2)
+  dueDate         DateTime
+
+  team         Team               @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  participants EventParticipant[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([teamId])
+}
+
+// ── EventParticipant ──────────────────────────────────────────────────────────
+
+/// Registro de la participación (y estado de pago) de una jugadora en un evento.
+/// @@unique([eventId, teamMemberId]) garantiza que una jugadora aparezca una sola vez por evento.
+model EventParticipant {
+  id           String            @id @default(cuid())
+  eventId      String
+  teamMemberId String
+  status       ParticipantStatus @default(PENDIENTE)
+
+  event      Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  teamMember TeamMember @relation(fields: [teamMemberId], references: [id], onDelete: Cascade)
+  /// Un EventParticipant tiene como máximo un Payment
+  payment    Payment?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([eventId, teamMemberId])
+  @@index([teamMemberId])
+}
+
+// ── Payment (Pago) ────────────────────────────────────────────────────────────
+
+/// Registro del pago de una jugadora para un evento.
+/// La relación con EventParticipant es 1-a-1 (@unique en eventParticipantId).
+model Payment {
+  id                 String   @id @default(cuid())
+  eventParticipantId String   @unique
+  /// Monto efectivamente pagado (puede diferir del amountPerPlayer del evento)
+  amount             Decimal  @db.Decimal(12, 2)
+  paidAt             DateTime
+  /// URL del comprobante de pago (captura de transferencia, etc.)
+  receiptUrl         String?
+  confirmedById      String
+
+  eventParticipant EventParticipant @relation(fields: [eventParticipantId], references: [id], onDelete: Cascade)
+  confirmedBy      User             @relation("PaymentConfirmedBy", fields: [confirmedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ── Expense (Gasto) ───────────────────────────────────────────────────────────
+
+/// Gasto del equipo (entrenador, alquiler de cancha, etc.).
+/// No está ligado a un Event específico — es un gasto operativo del equipo.
+model Expense {
+  id      String   @id @default(cuid())
+  teamId  String
+  concept String
+  amount  Decimal  @db.Decimal(12, 2)
+  /// Nombre o descripción de a quién se le pagó
+  paidTo  String
+  paidAt  DateTime
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([teamId])
+}
