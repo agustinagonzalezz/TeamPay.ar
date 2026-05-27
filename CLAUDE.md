@@ -280,7 +280,7 @@ npm run build                   # Build de producción (correr antes de commitea
 - [x] Registro de Gastos — crear/listar/eliminar gastos del equipo (`/equipos/[id]/gastos`)
 - [x] Dashboard de Balance — resumen financiero por equipo (`/equipos/[id]/balance`)
 - [x] Vista de Jugadora — perfil personal con deudas pendientes e historial de pagos (`/perfil`)
-- [ ] Deploy (Vercel + Neon o Supabase)
+- [x] Deploy — Vercel (team-pay-ar.vercel.app) + Neon PostgreSQL
 
 ---
 
