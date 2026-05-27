@@ -24,7 +24,7 @@ import {
 import { getCurrentUser } from "@/lib/auth"
 import { getTeamBalance } from "@/services/balanceService"
 import { getTeamById } from "@/services/teamService"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { buttonVariants } from "@/components/ui/button"
 import { formatCurrency, formatDateShort, cn } from "@/lib/utils"
 import { EVENT_TYPE_LABELS } from "@/lib/validations/evento"
@@ -35,10 +35,10 @@ export const metadata: Metadata = { title: "Balance — TeamPay.ar" }
 // ── Colores por tipo de evento ────────────────────────────────────────────────
 
 const TYPE_BADGE: Record<EventType, string> = {
-  CUOTA:    "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-  AMISTOSO: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-  TORNEO:   "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
-  OTRO:     "bg-muted text-muted-foreground",
+  CUOTA:    "border border-primary/30 bg-primary/8 text-primary",
+  AMISTOSO: "border border-border bg-muted text-muted-foreground",
+  TORNEO:   "border border-primary/50 bg-primary/15 text-primary",
+  OTRO:     "border border-border bg-muted text-muted-foreground",
 }
 
 // ── Página ────────────────────────────────────────────────────────────────────
@@ -85,82 +85,56 @@ export default async function BalancePage({
       </div>
 
       {/* ── Resumen financiero ─────────────────────────────────────────── */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-3">
 
         {/* Cobrado */}
-        <Card size="sm">
-          <CardHeader className="flex-row items-center gap-2 pb-1">
-            <TrendingUp className="size-4 text-green-500" aria-hidden="true" />
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total cobrado
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xl font-bold text-green-600 dark:text-green-400">
-              {formatCurrency(totalCobrado)}
-            </p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              de pagos de jugadoras
-            </p>
-          </CardContent>
-        </Card>
+        <div className="flex flex-col gap-1 rounded-xl border border-border bg-card px-5 py-4">
+          <div className="flex items-center gap-1.5">
+            <TrendingUp className="size-3.5 text-primary" aria-hidden="true" />
+            <span className="text-xs font-medium text-muted-foreground">Total cobrado</span>
+          </div>
+          <p className="mt-1 text-xl font-bold tabular-nums text-foreground">
+            {formatCurrency(totalCobrado)}
+          </p>
+          <p className="text-[11px] text-muted-foreground">de pagos de jugadoras</p>
+        </div>
 
         {/* Gastado */}
-        <Card size="sm">
-          <CardHeader className="flex-row items-center gap-2 pb-1">
-            <TrendingDown className="size-4 text-red-500" aria-hidden="true" />
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total gastado
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xl font-bold text-red-600 dark:text-red-400">
-              {formatCurrency(totalGastado)}
-            </p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              en gastos del equipo
-            </p>
-          </CardContent>
-        </Card>
+        <div className="flex flex-col gap-1 rounded-xl border border-border bg-card px-5 py-4">
+          <div className="flex items-center gap-1.5">
+            <TrendingDown className="size-3.5 text-destructive/70" aria-hidden="true" />
+            <span className="text-xs font-medium text-muted-foreground">Total gastado</span>
+          </div>
+          <p className="mt-1 text-xl font-bold tabular-nums text-foreground">
+            {formatCurrency(totalGastado)}
+          </p>
+          <p className="text-[11px] text-muted-foreground">en gastos del equipo</p>
+        </div>
 
         {/* Balance neto */}
-        <Card
-          size="sm"
-          className={cn(
-            balancePositivo
-              ? "border-green-200 bg-green-50/50 dark:border-green-900 dark:bg-green-900/10"
-              : "border-red-200 bg-red-50/50 dark:border-red-900 dark:bg-red-900/10"
-          )}
+        <div
+          className="flex flex-col gap-1 rounded-xl border px-5 py-4"
+          style={{
+            borderColor: balancePositivo ? "oklch(0.63 0.22 285 / 0.3)" : "oklch(0.65 0.19 22 / 0.3)",
+            background: balancePositivo ? "oklch(0.63 0.22 285 / 0.06)" : "oklch(0.65 0.19 22 / 0.06)",
+          }}
         >
-          <CardHeader className="flex-row items-center gap-2 pb-1">
+          <div className="flex items-center gap-1.5">
             <Wallet
-              className={cn(
-                "size-4",
-                balancePositivo ? "text-green-500" : "text-red-500"
-              )}
+              className="size-3.5"
+              style={{ color: balancePositivo ? "oklch(0.63 0.22 285)" : "oklch(0.65 0.19 22)" }}
               aria-hidden="true"
             />
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Balance neto
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p
-              className={cn(
-                "text-xl font-bold",
-                balancePositivo
-                  ? "text-green-600 dark:text-green-400"
-                  : "text-red-600 dark:text-red-400"
-              )}
-            >
-              {balance >= 0 ? "+" : ""}
-              {formatCurrency(balance)}
-            </p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              cobrado − gastado
-            </p>
-          </CardContent>
-        </Card>
+            <span className="text-xs font-medium text-muted-foreground">Balance neto</span>
+          </div>
+          <p
+            className="mt-1 text-xl font-bold tabular-nums"
+            style={{ color: balancePositivo ? "oklch(0.72 0.18 285)" : "oklch(0.72 0.16 22)" }}
+          >
+            {balance >= 0 ? "+" : ""}{formatCurrency(balance)}
+          </p>
+          <p className="text-[11px] text-muted-foreground">cobrado − gastado</p>
+        </div>
 
       </div>
 

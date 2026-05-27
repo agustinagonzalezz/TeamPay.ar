@@ -1,10 +1,3 @@
-/**
- * app/(dashboard)/equipos/[equipoId]/page.tsx — Dashboard del equipo
- *
- * Diseño: editorial deportivo — nombre del equipo como pieza tipográfica
- * dominante, stats como scoreboard sin cajas, avatares coloridos por jugadora.
- */
-
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
@@ -25,18 +18,18 @@ export async function generateMetadata({
   return { title: "Equipo — TeamPay.ar" }
 }
 
-// ── Colores de avatar determinísticos por nombre ──────────────────────────────
+// ── Colores de avatar — paleta violeta / complementaria ───────────────────────
 
 const AVATAR_COLORS = [
-  "bg-rose-100   text-rose-700   dark:bg-rose-900/40   dark:text-rose-300",
-  "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
-  "bg-amber-100  text-amber-700  dark:bg-amber-900/40  dark:text-amber-300",
-  "bg-lime-100   text-lime-700   dark:bg-lime-900/40   dark:text-lime-300",
-  "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
-  "bg-teal-100   text-teal-700   dark:bg-teal-900/40   dark:text-teal-300",
-  "bg-sky-100    text-sky-700    dark:bg-sky-900/40    dark:text-sky-300",
-  "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
-  "bg-pink-100   text-pink-700   dark:bg-pink-900/40   dark:text-pink-300",
+  "bg-violet-500/15 text-violet-300",
+  "bg-purple-500/15 text-purple-300",
+  "bg-fuchsia-500/15 text-fuchsia-300",
+  "bg-indigo-500/15 text-indigo-300",
+  "bg-blue-500/15 text-blue-300",
+  "bg-cyan-500/15 text-cyan-300",
+  "bg-teal-500/15 text-teal-300",
+  "bg-pink-500/15 text-pink-300",
+  "bg-rose-500/15 text-rose-300",
 ]
 
 function avatarColor(name: string) {
@@ -86,27 +79,32 @@ export default async function EquipoPage({
       </Link>
 
       {/* ── HERO — nombre del equipo ───────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-2xl bg-[oklch(0.1_0_0)] px-6 py-8 sm:px-10 sm:py-10">
-
+      <div
+        className="relative overflow-hidden rounded-2xl px-6 py-8 sm:px-10 sm:py-10"
+        style={{ background: "oklch(0.1 0.025 285)" }}
+      >
         {/* Inicial decorativa de fondo */}
         <span
-          className="pointer-events-none absolute -right-3 -top-4 select-none text-[11rem] font-black leading-none tracking-tighter text-white/[0.04] sm:text-[14rem]"
-          style={{ fontFamily: "var(--font-barlow)" }}
+          className="pointer-events-none absolute -right-3 -top-4 select-none leading-none tracking-tighter text-[11rem] font-black sm:text-[14rem]"
+          style={{
+            fontFamily: "var(--font-barlow)",
+            color: "oklch(0.63 0.22 285 / 0.05)",
+          }}
           aria-hidden="true"
         >
           {equipo.name.charAt(0).toUpperCase()}
         </span>
 
-        {/* Franja de acento verde */}
+        {/* Franja de acento violeta */}
         <div
           className="absolute left-0 top-0 h-full w-1.5 rounded-l-2xl"
-          style={{ background: "linear-gradient(to bottom, #84cc16, #22c55e)" }}
+          style={{ background: "linear-gradient(to bottom, oklch(0.72 0.18 285), oklch(0.52 0.22 285))" }}
         />
 
         {/* Contenido */}
         <div className="relative flex flex-col gap-3">
           <h1
-            className="text-5xl font-black leading-none tracking-tight text-white sm:text-6xl lg:text-7xl"
+            className="text-5xl font-black leading-none tracking-tight text-foreground sm:text-6xl lg:text-7xl"
             style={{ fontFamily: "var(--font-barlow)" }}
           >
             {equipo.name.toUpperCase()}
@@ -114,10 +112,17 @@ export default async function EquipoPage({
 
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
             {equipo.description && (
-              <p className="text-sm text-white/50">{equipo.description}</p>
+              <p className="text-sm text-muted-foreground">{equipo.description}</p>
             )}
             {esCapitana && (
-              <span className="rounded-full border border-lime-500/30 bg-lime-500/10 px-2.5 py-0.5 text-xs font-medium text-lime-400">
+              <span
+                className="rounded-full border px-2.5 py-0.5 text-xs font-medium"
+                style={{
+                  borderColor: "oklch(0.63 0.22 285 / 0.3)",
+                  background: "oklch(0.63 0.22 285 / 0.1)",
+                  color: "oklch(0.78 0.15 285)",
+                }}
+              >
                 Capitana
               </span>
             )}
@@ -126,7 +131,7 @@ export default async function EquipoPage({
       </div>
 
       {/* ── STATS — scoreboard ────────────────────────────────────────── */}
-      <div className="grid grid-cols-3 divide-x rounded-xl border">
+      <div className="grid grid-cols-3 divide-x divide-border rounded-xl border border-border">
 
         <div className="flex flex-col gap-0.5 px-4 py-4 sm:px-6">
           <span className="text-2xl font-bold tabular-nums sm:text-3xl">
@@ -148,13 +153,20 @@ export default async function EquipoPage({
 
         <Link
           href={`/equipos/${equipoId}/balance`}
-          className="group flex flex-col gap-0.5 px-4 py-4 transition-colors hover:bg-muted/40 sm:px-6"
+          className="group flex flex-col gap-0.5 px-4 py-4 transition-colors hover:bg-accent/40 sm:px-6"
         >
           <span className="flex items-center gap-1.5">
-            <span className="text-2xl font-bold tabular-nums text-green-600 dark:text-green-400 sm:text-3xl">
+            <span
+              className="text-2xl font-bold tabular-nums sm:text-3xl"
+              style={{ color: "oklch(0.72 0.18 285)" }}
+            >
               {totalGastos > 0 ? formatCurrency(totalGastos) : "—"}
             </span>
-            <TrendingUp className="size-4 text-green-500 opacity-0 transition-opacity group-hover:opacity-100" aria-hidden="true" />
+            <TrendingUp
+              className="size-4 opacity-0 transition-opacity group-hover:opacity-100"
+              style={{ color: "oklch(0.63 0.22 285)" }}
+              aria-hidden="true"
+            />
           </span>
           <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
             Gastos · ver balance ↗
@@ -198,7 +210,8 @@ export default async function EquipoPage({
                   </div>
                   {esLaCapitana && (
                     <span
-                      className="absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-lime-500 text-[8px] text-white ring-2 ring-background"
+                      className="absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full text-[8px] ring-2 ring-background"
+                      style={{ background: "oklch(0.63 0.22 285)", color: "oklch(0.99 0 0)" }}
                       aria-label="Capitana"
                     >
                       ★
@@ -210,7 +223,7 @@ export default async function EquipoPage({
             {equipo.members.length > AVATARS_VISIBLE && (
               <Link
                 href={`/equipos/${equipoId}/jugadoras`}
-                className="flex size-11 shrink-0 items-center justify-center rounded-full border-2 border-dashed border-border text-xs font-semibold text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                className="flex size-11 shrink-0 items-center justify-center rounded-full border-2 border-dashed border-border text-xs font-semibold text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary"
               >
                 +{equipo.members.length - AVATARS_VISIBLE}
               </Link>
@@ -279,7 +292,7 @@ export default async function EquipoPage({
           <EmptyState mensaje="Todavía no hay gastos registrados." />
         ) : (
           <>
-            <ul className="flex flex-col divide-y rounded-xl border">
+            <ul className="flex flex-col divide-y divide-border rounded-xl border border-border">
               {gastos.slice(0, 5).map((gasto, i) => (
                 <li
                   key={gasto.id}
@@ -293,7 +306,7 @@ export default async function EquipoPage({
                     <span className="truncate text-sm font-medium">{gasto.concept}</span>
                     <span className="text-xs text-muted-foreground">{gasto.paidTo}</span>
                   </div>
-                  <span className="shrink-0 text-sm font-semibold tabular-nums">
+                  <span className="shrink-0 text-sm font-semibold tabular-nums text-muted-foreground">
                     {formatCurrency(Number(gasto.amount))}
                   </span>
                 </li>
@@ -319,7 +332,7 @@ export default async function EquipoPage({
 
 function EmptyState({ mensaje }: { mensaje: string }) {
   return (
-    <div className="rounded-xl border border-dashed py-10 text-center">
+    <div className="rounded-xl border border-dashed border-border py-10 text-center">
       <p className="text-sm text-muted-foreground">{mensaje}</p>
     </div>
   )
