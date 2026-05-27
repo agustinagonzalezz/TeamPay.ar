@@ -81,46 +81,48 @@ export default async function EquipoPage({
       {/* ── HERO — nombre del equipo ───────────────────────────────────── */}
       <div
         className="relative overflow-hidden rounded-2xl px-6 py-8 sm:px-10 sm:py-10"
-        style={{ background: "oklch(0.1 0.025 285)" }}
+        style={{ background: "oklch(0.52 0.22 285)" }}
       >
         {/* Inicial decorativa de fondo */}
         <span
           className="pointer-events-none absolute -right-3 -top-4 select-none leading-none tracking-tighter text-[11rem] font-black sm:text-[14rem]"
           style={{
             fontFamily: "var(--font-barlow)",
-            color: "oklch(0.63 0.22 285 / 0.05)",
+            color: "oklch(0.99 0 0 / 0.08)",
           }}
           aria-hidden="true"
         >
           {equipo.name.charAt(0).toUpperCase()}
         </span>
 
-        {/* Franja de acento violeta */}
+        {/* Franja de acento — violeta más claro */}
         <div
           className="absolute left-0 top-0 h-full w-1.5 rounded-l-2xl"
-          style={{ background: "linear-gradient(to bottom, oklch(0.52 0.22 285), oklch(0.52 0.22 285))" }}
+          style={{ background: "linear-gradient(to bottom, oklch(0.82 0.1 285), oklch(0.72 0.16 285))" }}
         />
 
         {/* Contenido */}
         <div className="relative flex flex-col gap-3">
           <h1
-            className="text-5xl font-black leading-none tracking-tight text-foreground sm:text-6xl lg:text-7xl"
-            style={{ fontFamily: "var(--font-barlow)" }}
+            className="text-5xl font-black leading-none tracking-tight sm:text-6xl lg:text-7xl"
+            style={{ fontFamily: "var(--font-barlow)", color: "oklch(0.99 0 0)" }}
           >
             {equipo.name.toUpperCase()}
           </h1>
 
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
             {equipo.description && (
-              <p className="text-sm text-muted-foreground">{equipo.description}</p>
+              <p className="text-sm" style={{ color: "oklch(0.99 0 0 / 0.65)" }}>
+                {equipo.description}
+              </p>
             )}
             {esCapitana && (
               <span
                 className="rounded-full border px-2.5 py-0.5 text-xs font-medium"
                 style={{
-                  borderColor: "oklch(0.63 0.22 285 / 0.3)",
-                  background: "oklch(0.63 0.22 285 / 0.1)",
-                  color: "oklch(0.72 0.18 285)",
+                  borderColor: "oklch(0.99 0 0 / 0.3)",
+                  background: "oklch(0.99 0 0 / 0.12)",
+                  color: "oklch(0.99 0 0 / 0.9)",
                 }}
               >
                 Capitana
