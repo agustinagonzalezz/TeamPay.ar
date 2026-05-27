@@ -39,7 +39,7 @@ export default async function LoginPage({
   const redirectTo = callbackUrl ?? "/";
 
   return (
-    <div className="mx-auto flex w-full max-w-sm flex-col gap-10">
+    <div className="mx-auto flex w-full max-w-sm flex-col gap-10" style={{ fontFamily: "var(--font-syne)" }}>
 
       {/* Logotipo */}
       <div>

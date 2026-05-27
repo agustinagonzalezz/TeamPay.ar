@@ -1,13 +1,18 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Syne, Barlow_Condensed } from "next/font/google";
+import { Geist, Geist_Mono, Syne, Barlow_Condensed } from "next/font/google";
 import "./globals.css";
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
 
-// Fuente principal — geométrica, editorial, distintiva
+// Syne — solo para el login
 const syne = Syne({
   variable: "--font-syne",
   weight: ["400", "500", "600", "700", "800"],
@@ -35,7 +40,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${syne.variable} ${geistMono.variable} ${barlowCondensed.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${syne.variable} ${geistMono.variable} ${barlowCondensed.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
