@@ -24,8 +24,10 @@ import {
 import { getCurrentUser } from "@/lib/auth"
 import { getTeamBalance } from "@/services/balanceService"
 import { getTeamById } from "@/services/teamService"
+import { getDeudorasParaWhatsApp } from "@/services/notificacionService"
 import { Card } from "@/components/ui/card"
 import { buttonVariants } from "@/components/ui/button"
+import { WhatsAppMensaje } from "@/components/notificaciones/WhatsAppMensaje"
 import { formatCurrency, formatDateShort, cn } from "@/lib/utils"
 import { EVENT_TYPE_LABELS } from "@/lib/validations/evento"
 import type { EventType } from "@/generated/prisma/client"
@@ -53,9 +55,10 @@ export default async function BalancePage({
   const user = await getCurrentUser()
   if (!user) redirect("/login")
 
-  const [teamResult, balanceResult] = await Promise.all([
+  const [teamResult, balanceResult, deudorasResult] = await Promise.all([
     getTeamById(equipoId, user.id),
     getTeamBalance(equipoId, user.id),
+    getDeudorasParaWhatsApp(equipoId, user.id),
   ])
 
   if (!teamResult.success) notFound()
@@ -67,6 +70,7 @@ export default async function BalancePage({
 
   const balancePositivo = balance >= 0
   const gastosRecientes = gastos.slice(0, 5)
+  const deudorasData = deudorasResult.success ? deudorasResult.data : null
 
   return (
     <div className="flex flex-col gap-8">
@@ -298,6 +302,21 @@ export default async function BalancePage({
           </Card>
         )}
       </section>
+
+      {/* ── NOTIFICAR DEUDORAS — mensaje pre-armado para WhatsApp ─────── */}
+      {deudorasData && (
+        <section aria-labelledby="whatsapp-heading">
+          <div className="mb-4">
+            <h2 id="whatsapp-heading" className="text-lg font-semibold">
+              Notificar deudoras
+            </h2>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              Mensaje listo para copiar y pegar en WhatsApp.
+            </p>
+          </div>
+          <WhatsAppMensaje data={deudorasData} />
+        </section>
+      )}
 
     </div>
   )
