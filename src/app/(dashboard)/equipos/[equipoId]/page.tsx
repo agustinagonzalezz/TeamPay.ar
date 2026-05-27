@@ -98,7 +98,7 @@ export default async function EquipoPage({
         {/* Franja de acento violeta */}
         <div
           className="absolute left-0 top-0 h-full w-1.5 rounded-l-2xl"
-          style={{ background: "linear-gradient(to bottom, oklch(0.72 0.18 285), oklch(0.52 0.22 285))" }}
+          style={{ background: "linear-gradient(to bottom, oklch(0.52 0.22 285), oklch(0.52 0.22 285))" }}
         />
 
         {/* Contenido */}
@@ -120,7 +120,7 @@ export default async function EquipoPage({
                 style={{
                   borderColor: "oklch(0.63 0.22 285 / 0.3)",
                   background: "oklch(0.63 0.22 285 / 0.1)",
-                  color: "oklch(0.78 0.15 285)",
+                  color: "oklch(0.72 0.18 285)",
                 }}
               >
                 Capitana
@@ -158,13 +158,13 @@ export default async function EquipoPage({
           <span className="flex items-center gap-1.5">
             <span
               className="text-2xl font-bold tabular-nums sm:text-3xl"
-              style={{ color: "oklch(0.72 0.18 285)" }}
+              style={{ color: "oklch(0.52 0.22 285)" }}
             >
               {totalGastos > 0 ? formatCurrency(totalGastos) : "—"}
             </span>
             <TrendingUp
               className="size-4 opacity-0 transition-opacity group-hover:opacity-100"
-              style={{ color: "oklch(0.63 0.22 285)" }}
+              style={{ color: "oklch(0.52 0.22 285)" }}
               aria-hidden="true"
             />
           </span>
@@ -211,7 +211,7 @@ export default async function EquipoPage({
                   {esLaCapitana && (
                     <span
                       className="absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full text-[8px] ring-2 ring-background"
-                      style={{ background: "oklch(0.63 0.22 285)", color: "oklch(0.99 0 0)" }}
+                      style={{ background: "oklch(0.52 0.22 285)", color: "oklch(0.99 0 0)" }}
                       aria-label="Capitana"
                     >
                       ★

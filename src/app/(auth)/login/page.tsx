@@ -45,7 +45,7 @@ export default async function LoginPage({
       <div>
         <div
           className="mb-6 inline-flex size-10 items-center justify-center rounded-lg text-xs font-bold tracking-tight"
-          style={{ background: "oklch(0.63 0.22 285)", color: "oklch(0.99 0 0)" }}
+          style={{ background: "oklch(0.52 0.22 285)", color: "oklch(0.99 0 0)" }}
         >
           TP
         </div>

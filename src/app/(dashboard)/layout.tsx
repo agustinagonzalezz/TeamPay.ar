@@ -31,7 +31,7 @@ export default async function DashboardLayout({
           >
             <div
               className="flex size-6 shrink-0 items-center justify-center rounded text-[10px] font-bold tracking-tighter"
-              style={{ background: "oklch(0.63 0.22 285)", color: "oklch(0.99 0 0)" }}
+              style={{ background: "oklch(0.52 0.22 285)", color: "oklch(0.99 0 0)" }}
               aria-hidden="true"
             >
               TP
@@ -58,7 +58,7 @@ export default async function DashboardLayout({
             ) : (
               <div
                 className="flex size-7 items-center justify-center rounded-full text-xs font-semibold"
-                style={{ background: "oklch(0.63 0.22 285 / 0.15)", color: "oklch(0.63 0.22 285)" }}
+                style={{ background: "oklch(0.52 0.22 285 / 0.12)", color: "oklch(0.52 0.22 285)" }}
               >
                 {initials}
               </div>

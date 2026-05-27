@@ -48,91 +48,81 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* ── Violet Noir — dark system (base + dark class mirror) ─────────────────── */
+/* ── Lilac Light — sistema claro con acento violeta ───────────────────────── */
 
 :root {
-  --background:           oklch(0.07  0.015 285);
-  --foreground:           oklch(0.95  0.008 285);
+  --background:           oklch(0.955 0.016 285);   /* lila bien clarito */
+  --foreground:           oklch(0.16  0.025 285);   /* texto casi negro, tinte violeta */
 
-  --card:                 oklch(0.105 0.02  285);
-  --card-foreground:      oklch(0.95  0.008 285);
+  --card:                 oklch(0.995 0.005 285);   /* blanco ligerísimamente violeta */
+  --card-foreground:      oklch(0.16  0.025 285);
 
-  --popover:              oklch(0.11  0.022 285);
-  --popover-foreground:   oklch(0.95  0.008 285);
+  --popover:              oklch(0.995 0.005 285);
+  --popover-foreground:   oklch(0.16  0.025 285);
 
-  --primary:              oklch(0.63  0.22  285);
+  --primary:              oklch(0.52  0.22  285);   /* violeta vívido (el que gustó) */
   --primary-foreground:   oklch(0.99  0     0  );
 
-  --secondary:            oklch(0.14  0.03  285);
-  --secondary-foreground: oklch(0.82  0.05  285);
+  --secondary:            oklch(0.91  0.024 285);   /* superfice lila más oscura */
+  --secondary-foreground: oklch(0.28  0.04  285);
 
-  --muted:                oklch(0.14  0.025 285);
-  --muted-foreground:     oklch(0.52  0.055 285);
+  --muted:                oklch(0.91  0.022 285);
+  --muted-foreground:     oklch(0.48  0.05  285);
 
-  --accent:               oklch(0.14  0.03  285);
-  --accent-foreground:    oklch(0.95  0.008 285);
+  --accent:               oklch(0.91  0.024 285);
+  --accent-foreground:    oklch(0.16  0.025 285);
 
-  --destructive:          oklch(0.65  0.19  22 );
-  --destructive-foreground: oklch(0.99 0    0  );
+  --destructive:          oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0   0   );
 
-  --border:               oklch(0.21  0.04  285);
-  --input:                oklch(0.14  0.025 285);
-  --ring:                 oklch(0.63  0.22  285);
+  --border:               oklch(0.84  0.042 285);   /* borde lavanda bien visible */
+  --input:                oklch(0.91  0.022 285);
+  --ring:                 oklch(0.52  0.22  285);
 
   --radius: 0.5rem;
 
-  --chart-1: oklch(0.63 0.22 285);
-  --chart-2: oklch(0.52 0.18 285);
-  --chart-3: oklch(0.42 0.14 285);
-  --chart-4: oklch(0.35 0.10 285);
-  --chart-5: oklch(0.28 0.07 285);
+  --chart-1: oklch(0.52 0.22 285);
+  --chart-2: oklch(0.63 0.18 285);
+  --chart-3: oklch(0.42 0.16 285);
+  --chart-4: oklch(0.35 0.12 285);
+  --chart-5: oklch(0.28 0.08 285);
 
-  --sidebar:                  oklch(0.09  0.018 285);
-  --sidebar-foreground:       oklch(0.95  0.008 285);
-  --sidebar-primary:          oklch(0.63  0.22  285);
+  --sidebar:                  oklch(0.975 0.014 285);
+  --sidebar-foreground:       oklch(0.16  0.025 285);
+  --sidebar-primary:          oklch(0.52  0.22  285);
   --sidebar-primary-foreground: oklch(0.99 0    0  );
-  --sidebar-accent:           oklch(0.14  0.03  285);
-  --sidebar-accent-foreground: oklch(0.95 0.008 285);
-  --sidebar-border:           oklch(0.21  0.04  285);
-  --sidebar-ring:             oklch(0.63  0.22  285);
+  --sidebar-accent:           oklch(0.91  0.024 285);
+  --sidebar-accent-foreground: oklch(0.16 0.025 285);
+  --sidebar-border:           oklch(0.84  0.042 285);
+  --sidebar-ring:             oklch(0.52  0.22  285);
 }
 
-/* Mirror of :root — ensures dark: Tailwind variants activate correctly */
+/* Dark preservado — no activo (sin clase dark en <html>) */
 .dark {
   --background:           oklch(0.07  0.015 285);
   --foreground:           oklch(0.95  0.008 285);
-
   --card:                 oklch(0.105 0.02  285);
   --card-foreground:      oklch(0.95  0.008 285);
-
   --popover:              oklch(0.11  0.022 285);
   --popover-foreground:   oklch(0.95  0.008 285);
-
   --primary:              oklch(0.63  0.22  285);
   --primary-foreground:   oklch(0.99  0     0  );
-
   --secondary:            oklch(0.14  0.03  285);
   --secondary-foreground: oklch(0.82  0.05  285);
-
   --muted:                oklch(0.14  0.025 285);
   --muted-foreground:     oklch(0.52  0.055 285);
-
   --accent:               oklch(0.14  0.03  285);
   --accent-foreground:    oklch(0.95  0.008 285);
-
   --destructive:          oklch(0.65  0.19  22 );
   --destructive-foreground: oklch(0.99 0    0  );
-
   --border:               oklch(0.21  0.04  285);
   --input:                oklch(0.14  0.025 285);
   --ring:                 oklch(0.63  0.22  285);
-
   --chart-1: oklch(0.63 0.22 285);
   --chart-2: oklch(0.52 0.18 285);
   --chart-3: oklch(0.42 0.14 285);
   --chart-4: oklch(0.35 0.10 285);
   --chart-5: oklch(0.28 0.07 285);
-
   --sidebar:                  oklch(0.09  0.018 285);
   --sidebar-foreground:       oklch(0.95  0.008 285);
   --sidebar-primary:          oklch(0.63  0.22  285);
@@ -154,19 +144,12 @@
     @apply font-sans;
   }
 
-  /* Tight tracking on headings — Syne looks best condensed */
   h1, h2, h3, h4, h5, h6 {
     letter-spacing: -0.02em;
   }
-
-  /* Tabular numbers for financial data */
-  [class*="tabular-nums"],
-  .font-mono {
-    font-variant-numeric: tabular-nums;
-  }
 }
 
-/* ── Scrollbar — violet-tinted ─────────────────────────────────────────────── */
+/* ── Scrollbar — tinte lavanda ─────────────────────────────────────────────── */
 
 ::-webkit-scrollbar {
   width: 5px;
@@ -176,16 +159,16 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: oklch(0.25 0.05 285);
+  background: oklch(0.78 0.06 285);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.38 0.09 285);
+  background: oklch(0.65 0.1 285);
 }
 
 /* ── Text selection ────────────────────────────────────────────────────────── */
 
 ::selection {
-  background: oklch(0.63 0.22 285 / 0.28);
-  color: oklch(0.97 0.005 285);
+  background: oklch(0.52 0.22 285 / 0.2);
+  color: oklch(0.16 0.025 285);
 }

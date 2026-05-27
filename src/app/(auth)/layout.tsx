@@ -7,9 +7,9 @@ export default function AuthLayout({
     <main
       className="relative flex min-h-screen flex-col items-center justify-center px-6 py-16 overflow-hidden"
       style={{
-        background: "oklch(0.07 0.015 285)",
+        background: "oklch(0.955 0.016 285)",
         backgroundImage:
-          "radial-gradient(oklch(0.22 0.04 285) 1px, transparent 1px)",
+          "radial-gradient(oklch(0.84 0.042 285) 1px, transparent 1px)",
         backgroundSize: "28px 28px",
       }}
     >
@@ -18,7 +18,7 @@ export default function AuthLayout({
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 80% 70% at 50% 50%, transparent 40%, oklch(0.07 0.015 285) 100%)",
+            "radial-gradient(ellipse 80% 70% at 50% 50%, transparent 40%, oklch(0.955 0.016 285) 100%)",
         }}
         aria-hidden="true"
       />
