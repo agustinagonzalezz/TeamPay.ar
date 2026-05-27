@@ -15,6 +15,7 @@ import { getTeamById } from "@/services/teamService"
 import { getJugadorasByTeam } from "@/services/jugadoraService"
 import { AddJugadoraForm } from "@/components/jugadoras/AddJugadoraForm"
 import { RemoveJugadoraButton } from "@/components/jugadoras/RemoveJugadoraButton"
+import { CopyInviteLinkButton } from "@/components/equipos/CopyInviteLinkButton"
 import { Card } from "@/components/ui/card"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -68,6 +69,17 @@ export default async function JugadorasPage({
 
       {/* ── Formulario para agregar (solo capitana) ─────────────────────── */}
       {esCapitana && <AddJugadoraForm equipoId={equipoId} />}
+
+      {/* ── Link de invitación (solo capitana) ──────────────────────────── */}
+      {esCapitana && (
+        <div className="rounded-xl border bg-muted/30 px-4 py-4">
+          <p className="text-sm font-medium">Invitar jugadoras</p>
+          <p className="mt-0.5 text-xs text-muted-foreground mb-3">
+            Compartí este link para que las jugadoras se unan con su cuenta de Google.
+          </p>
+          <CopyInviteLinkButton equipoId={equipoId} />
+        </div>
+      )}
 
       {/* ── Lista de jugadoras ───────────────────────────────────────────── */}
       {jugadoras.length === 0 ? (

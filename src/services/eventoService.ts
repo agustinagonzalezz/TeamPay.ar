@@ -12,6 +12,7 @@ import type {
   EventParticipant,
   TeamMember,
   Payment,
+  ParticipantStatus,
 } from "@/generated/prisma/client"
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
@@ -43,6 +44,14 @@ async function isCapitana(teamId: string, userId: string): Promise<boolean> {
   return !!team
 }
 
+/** Versión pública para usar en Server Components de página. */
+export async function checkIsCapitana(
+  teamId: string,
+  userId: string
+): Promise<boolean> {
+  return isCapitana(teamId, userId)
+}
+
 // ── createEvento ──────────────────────────────────────────────────────────────
 
 /**
@@ -65,6 +74,13 @@ export async function createEvento(
       select: { id: true },
     })
 
+    if (jugadoras.length === 0) {
+      return { success: false, error: "El equipo no tiene jugadoras activas." }
+    }
+
+    // Dividir el total entre la cantidad de jugadoras y redondear a entero
+    const amountPerPlayer = Math.round(input.totalAmount / jugadoras.length)
+
     const evento = await prisma.$transaction(async (tx) => {
       const ev = await tx.event.create({
         data: {
@@ -72,7 +88,7 @@ export async function createEvento(
           name: input.name.trim(),
           type: input.type,
           // Prisma Decimal acepta string; evitamos problemas de precisión flotante
-          amountPerPlayer: String(input.amountPerPlayer),
+          amountPerPlayer: String(amountPerPlayer),
           dueDate: new Date(input.dueDate),
         },
       })
@@ -160,10 +176,17 @@ export async function getEventoById(
             teamMember: true,
             payment: true,
           },
-          orderBy: { teamMember: { name: "asc" } },
+          // orderBy por campo de relación no soportado con PrismaPg adapter
+          // → ordenamos en JavaScript después de obtener los datos
         },
       },
     })
+
+    if (evento) {
+      evento.participants.sort((a, b) =>
+        a.teamMember.name.localeCompare(b.teamMember.name, "es")
+      )
+    }
 
     if (!evento) {
       return { success: false, error: "Evento no encontrado." }
@@ -173,5 +196,74 @@ export async function getEventoById(
   } catch (error) {
     console.error("[eventoService.getEventoById]", error)
     return { success: false, error: "No se pudo cargar el evento." }
+  }
+}
+
+// ── updateParticipantStatus ───────────────────────────────────────────────────
+
+/**
+ * Cambia el estado de pago de un participante.
+ *
+ * • PAGO      → crea (o actualiza) el Payment con amountPerPlayer del evento.
+ * • PENDIENTE → elimina el Payment si existe.
+ * • EXIMIDA   → elimina el Payment si existe.
+ *
+ * Solo la capitana puede modificar estados de pago.
+ */
+export async function updateParticipantStatus(
+  participantId: string,
+  teamId: string,
+  newStatus: ParticipantStatus,
+  userId: string
+): Promise<ServiceResult<EventParticipant>> {
+  try {
+    if (!(await isCapitana(teamId, userId))) {
+      return { success: false, error: "Solo la capitana puede registrar pagos." }
+    }
+
+    // Obtener participante con evento y pago actual
+    const participant = await prisma.eventParticipant.findUnique({
+      where: { id: participantId },
+      include: { event: true, payment: true },
+    })
+
+    if (!participant || participant.event.teamId !== teamId) {
+      return { success: false, error: "Participante no encontrado." }
+    }
+
+    const updated = await prisma.$transaction(async (tx) => {
+      if (newStatus === "PAGO") {
+        const amount = String(participant.event.amountPerPlayer)
+        if (participant.payment) {
+          // Actualizar pago existente (p.ej.: capitana deshace y vuelve a marcar)
+          await tx.payment.update({
+            where: { id: participant.payment.id },
+            data: { amount, paidAt: new Date(), confirmedById: userId },
+          })
+        } else {
+          await tx.payment.create({
+            data: {
+              eventParticipantId: participantId,
+              amount,
+              paidAt: new Date(),
+              confirmedById: userId,
+            },
+          })
+        }
+      } else if (participant.payment) {
+        // PENDIENTE o EXIMIDA: eliminar el pago registrado
+        await tx.payment.delete({ where: { id: participant.payment.id } })
+      }
+
+      return tx.eventParticipant.update({
+        where: { id: participantId },
+        data: { status: newStatus },
+      })
+    })
+
+    return { success: true, data: updated }
+  } catch (error) {
+    console.error("[eventoService.updateParticipantStatus]", error)
+    return { success: false, error: "No se pudo actualizar el estado del pago." }
   }
 }

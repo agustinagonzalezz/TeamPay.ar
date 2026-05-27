@@ -22,11 +22,11 @@ export const createEventoSchema = z.object({
     error: "Seleccioná un tipo de evento",
   }),
 
-  // El form parsea el string del input a number antes de pasarlo al schema
-  amountPerPlayer: z
+  // Monto TOTAL del evento; el service lo divide por la cantidad de jugadoras
+  totalAmount: z
     .number({ error: "Ingresá un monto válido" })
     .positive("El monto debe ser mayor a 0")
-    .max(9_999_999, "El monto es demasiado alto"),
+    .max(99_999_999, "El monto es demasiado alto"),
 
   // Viene como "YYYY-MM-DD" del input date nativo
   dueDate: z

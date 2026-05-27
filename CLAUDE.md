@@ -276,10 +276,10 @@ npm run build                   # Build de producción (correr antes de commitea
 - [x] CRUD de Equipos — Crear + Listar + Ver (`/equipos`, `/equipos/nuevo`, `/equipos/[id]`)
 - [x] Gestión de Jugadoras — Agregar + Listar + Dar de baja (`/equipos/[id]/jugadoras`)
 - [x] CRUD de Eventos — Crear + Listar + Ver detalle con participantes (`/equipos/[id]/eventos/nuevo`, `/equipos/[id]/eventos/[eventoId]`)
-- [ ] Registro de Pagos por evento
-- [ ] Registro de Gastos
-- [ ] Dashboard de Balance
-- [ ] Vista de Jugadora (deudas propias)
+- [x] Registro de Pagos por evento — marcar/desmarcar pago por jugadora desde la página del evento
+- [x] Registro de Gastos — crear/listar/eliminar gastos del equipo (`/equipos/[id]/gastos`)
+- [x] Dashboard de Balance — resumen financiero por equipo (`/equipos/[id]/balance`)
+- [x] Vista de Jugadora — perfil personal con deudas pendientes e historial de pagos (`/perfil`)
 - [ ] Deploy (Vercel + Neon o Supabase)
 
 ---

@@ -2,19 +2,20 @@
  * app/(dashboard)/equipos/[equipoId]/eventos/[eventoId]/page.tsx
  *
  * Detalle de un evento: info general + lista de participantes con estado de pago.
+ * La capitana puede marcar/desmarcar pagos desde esta página.
  */
 
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
-import { ArrowLeft, CheckCircle2, Clock, MinusCircle } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 import { getCurrentUser } from "@/lib/auth"
-import { getEventoById } from "@/services/eventoService"
+import { getEventoById, checkIsCapitana } from "@/services/eventoService"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { buttonVariants } from "@/components/ui/button"
+import { ParticipantRow } from "@/components/eventos/ParticipantRow"
 import { formatCurrency, formatDate, cn } from "@/lib/utils"
 import { EVENT_TYPE_LABELS } from "@/lib/validations/evento"
-import type { ParticipantStatus } from "@/generated/prisma/client"
 
 export const metadata: Metadata = { title: "Evento — TeamPay.ar" }
 
@@ -30,7 +31,11 @@ export default async function EventoPage({
   const user = await getCurrentUser()
   if (!user) redirect("/login")
 
-  const result = await getEventoById(eventoId, equipoId, user.id)
+  const [result, isCapitana] = await Promise.all([
+    getEventoById(eventoId, equipoId, user.id),
+    checkIsCapitana(equipoId, user.id),
+  ])
+
   if (!result.success) notFound()
 
   const evento = result.data
@@ -38,7 +43,6 @@ export default async function EventoPage({
   // Estadísticas de pagos
   const total = evento.participants.length
   const pagos = evento.participants.filter((p) => p.status === "PAGO").length
-  const pendientes = evento.participants.filter((p) => p.status === "PENDIENTE").length
   const eximidas = evento.participants.filter((p) => p.status === "EXIMIDA").length
   const obligadas = total - eximidas
   const progreso = obligadas > 0 ? Math.round((pagos / obligadas) * 100) : 100
@@ -79,15 +83,25 @@ export default async function EventoPage({
       {/* ── Stats ─────────────────────────────────────────────────────────── */}
       <div className="grid gap-4 sm:grid-cols-3">
         <StatCard label="Total cobrado" value={formatCurrency(totalCobrado)} />
-        <StatCard label="Pendiente" value={formatCurrency(Math.max(totalEsperado - totalCobrado, 0))} />
-        <StatCard label="Progreso" value={`${pagos}/${obligadas} (${progreso}%)`} />
+        <StatCard
+          label="Pendiente"
+          value={formatCurrency(Math.max(totalEsperado - totalCobrado, 0))}
+        />
+        <StatCard label="Pagaron" value={`${pagos} de ${obligadas} (${progreso}%)`} />
       </div>
 
       {/* ── Lista de participantes ─────────────────────────────────────────── */}
       <section aria-labelledby="participantes-heading">
-        <h2 id="participantes-heading" className="mb-4 text-lg font-semibold">
-          Participantes
-        </h2>
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <h2 id="participantes-heading" className="text-lg font-semibold">
+            Participantes
+          </h2>
+          {isCapitana && total > 0 && (
+            <p className="text-xs text-muted-foreground">
+              Tap en "Pagó" para registrar un pago
+            </p>
+          )}
+        </div>
 
         {evento.participants.length === 0 ? (
           <div className="rounded-xl border border-dashed py-10 text-center">
@@ -99,31 +113,20 @@ export default async function EventoPage({
           <Card size="sm">
             <ul role="list" className="divide-y">
               {evento.participants.map((participant) => (
-                <li
+                <ParticipantRow
                   key={participant.id}
-                  className="flex items-center gap-3 px-4 py-3"
-                >
-                  {/* Ícono de estado */}
-                  <StatusIcon status={participant.status} />
-
-                  {/* Nombre */}
-                  <div className="flex flex-1 items-center justify-between gap-2">
-                    <span className="text-sm font-medium">
-                      {participant.teamMember.name}
-                    </span>
-
-                    <div className="flex items-center gap-3">
-                      {/* Monto pagado si existe */}
-                      {participant.payment && (
-                        <span className="text-sm font-semibold text-green-600 dark:text-green-400">
-                          {formatCurrency(Number(participant.payment.amount))}
-                        </span>
-                      )}
-                      {/* Badge de estado */}
-                      <StatusBadge status={participant.status} />
-                    </div>
-                  </div>
-                </li>
+                  // Serializar Decimal → number antes de pasar al Client Component
+                  participant={{
+                    ...participant,
+                    payment: participant.payment
+                      ? { ...participant.payment, amount: Number(participant.payment.amount) }
+                      : null,
+                  }}
+                  equipoId={equipoId}
+                  eventoId={eventoId}
+                  isCapitana={isCapitana}
+                  amountPerPlayer={Number(evento.amountPerPlayer)}
+                />
               ))}
             </ul>
           </Card>
@@ -134,7 +137,7 @@ export default async function EventoPage({
   )
 }
 
-// ── Helpers de UI ─────────────────────────────────────────────────────────────
+// ── Stat card ─────────────────────────────────────────────────────────────────
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
@@ -148,45 +151,5 @@ function StatCard({ label, value }: { label: string; value: string }) {
         <p className="text-xl font-bold">{value}</p>
       </CardContent>
     </Card>
-  )
-}
-
-function StatusIcon({ status }: { status: ParticipantStatus }) {
-  if (status === "PAGO") {
-    return (
-      <CheckCircle2
-        className="size-5 shrink-0 text-green-500"
-        aria-label="Pagó"
-      />
-    )
-  }
-  if (status === "EXIMIDA") {
-    return (
-      <MinusCircle
-        className="size-5 shrink-0 text-muted-foreground"
-        aria-label="Eximida"
-      />
-    )
-  }
-  return (
-    <Clock
-      className="size-5 shrink-0 text-amber-500"
-      aria-label="Pendiente"
-    />
-  )
-}
-
-const STATUS_BADGE: Record<ParticipantStatus, { label: string; className: string }> = {
-  PAGO:      { label: "Pagó",      className: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
-  PENDIENTE: { label: "Pendiente", className: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
-  EXIMIDA:   { label: "Eximida",   className: "bg-muted text-muted-foreground" },
-}
-
-function StatusBadge({ status }: { status: ParticipantStatus }) {
-  const { label, className } = STATUS_BADGE[status]
-  return (
-    <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", className)}>
-      {label}
-    </span>
   )
 }
