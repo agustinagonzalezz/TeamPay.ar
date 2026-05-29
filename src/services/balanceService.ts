@@ -41,15 +41,29 @@ export type TeamBalanceData = {
   gastos: Expense[]
 }
 
+export type FiltroFecha = {
+  desde?: Date
+  hasta?: Date
+}
+
 // ── getTeamBalance ─────────────────────────────────────────────────────────────
 
 /**
  * Retorna el resumen financiero completo del equipo.
  * Verifica que el usuario sea miembro activo.
  */
+function buildDateRange(filtro?: FiltroFecha) {
+  if (!filtro?.desde && !filtro?.hasta) return undefined
+  return {
+    ...(filtro.desde && { gte: filtro.desde }),
+    ...(filtro.hasta && { lte: filtro.hasta }),
+  }
+}
+
 export async function getTeamBalance(
   teamId: string,
-  userId: string
+  userId: string,
+  filtro?: FiltroFecha
 ): Promise<ServiceResult<TeamBalanceData>> {
   try {
     // 1. Verificar acceso
@@ -61,9 +75,13 @@ export async function getTeamBalance(
       return { success: false, error: "No tenés acceso a este equipo." }
     }
 
-    // 2. Obtener todos los eventos del equipo
+    // 2. Obtener eventos del equipo (con filtro de fecha opcional sobre dueDate)
+    const dueDateRange = buildDateRange(filtro)
     const events = await prisma.event.findMany({
-      where: { teamId },
+      where: {
+        teamId,
+        ...(dueDateRange ? { dueDate: dueDateRange } : {}),
+      },
       orderBy: { dueDate: "desc" },
     })
     const eventIds = events.map((e) => e.id)
@@ -81,9 +99,13 @@ export async function getTeamBalance(
           })
         : []
 
-    // 4. Obtener todos los gastos del equipo
+    // 4. Obtener gastos del equipo (con filtro de fecha opcional sobre paidAt)
+    const paidAtRange = buildDateRange(filtro)
     const gastos = await prisma.expense.findMany({
-      where: { teamId },
+      where: {
+        teamId,
+        ...(paidAtRange ? { paidAt: paidAtRange } : {}),
+      },
       orderBy: { paidAt: "desc" },
     })
 

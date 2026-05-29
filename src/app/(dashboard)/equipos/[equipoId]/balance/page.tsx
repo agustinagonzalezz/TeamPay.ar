@@ -28,9 +28,52 @@ import { getDeudorasParaWhatsApp } from "@/services/notificacionService"
 import { Card } from "@/components/ui/card"
 import { buttonVariants } from "@/components/ui/button"
 import { WhatsAppMensaje } from "@/components/notificaciones/WhatsAppMensaje"
+import { PeriodoFilter } from "@/components/balance/PeriodoFilter"
 import { formatCurrency, formatDateShort, cn } from "@/lib/utils"
 import { EVENT_TYPE_LABELS } from "@/lib/validations/evento"
 import type { EventType } from "@/generated/prisma/client"
+import type { FiltroFecha } from "@/services/balanceService"
+
+// ── Helpers de período ────────────────────────────────────────────────────────
+
+type PeriodoId = "todos" | "mes" | "trimestre" | "anio" | "custom"
+
+const PERIODO_LABELS: Record<PeriodoId, string> = {
+  todos:     "Todos los tiempos",
+  mes:       "Este mes",
+  trimestre: "Último trimestre",
+  anio:      "Este año",
+  custom:    "Período personalizado",
+}
+
+function getPeriodoFiltro(
+  periodo: PeriodoId,
+  desde?: string,
+  hasta?: string
+): FiltroFecha {
+  const hoy = new Date()
+  hoy.setHours(23, 59, 59, 999)
+
+  if (periodo === "mes") {
+    const inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1)
+    return { desde: inicio, hasta: hoy }
+  }
+  if (periodo === "trimestre") {
+    const inicio = new Date(hoy.getFullYear(), hoy.getMonth() - 2, 1)
+    return { desde: inicio, hasta: hoy }
+  }
+  if (periodo === "anio") {
+    const inicio = new Date(hoy.getFullYear(), 0, 1)
+    return { desde: inicio, hasta: hoy }
+  }
+  if (periodo === "custom" && desde && hasta) {
+    return {
+      desde: new Date(desde + "T00:00:00"),
+      hasta: new Date(hasta + "T23:59:59"),
+    }
+  }
+  return {} // todos — sin filtro
+}
 
 export const metadata: Metadata = { title: "Balance — TeamPay.ar" }
 
@@ -47,17 +90,26 @@ const TYPE_BADGE: Record<EventType, string> = {
 
 export default async function BalancePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ equipoId: string }>
+  searchParams: Promise<{ periodo?: string; desde?: string; hasta?: string }>
 }) {
   const { equipoId } = await params
+  const { periodo: rawPeriodo, desde, hasta } = await searchParams
+
+  const periodo = (["todos", "mes", "trimestre", "anio", "custom"].includes(rawPeriodo ?? "")
+    ? rawPeriodo
+    : "todos") as PeriodoId
+
+  const filtro = getPeriodoFiltro(periodo, desde, hasta)
 
   const user = await getCurrentUser()
   if (!user) redirect("/login")
 
   const [teamResult, balanceResult, deudorasResult] = await Promise.all([
     getTeamById(equipoId, user.id),
-    getTeamBalance(equipoId, user.id),
+    getTeamBalance(equipoId, user.id, filtro),
     getDeudorasParaWhatsApp(equipoId, user.id),
   ])
 
@@ -84,8 +136,26 @@ export default async function BalancePage({
           <ArrowLeft className="size-4" aria-hidden="true" />
           Volver al equipo
         </Link>
-        <h1 className="text-2xl font-bold tracking-tight">Balance</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{equipo.name}</p>
+        <div className="flex items-baseline justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Balance</h1>
+            <p className="mt-1 text-sm text-muted-foreground">{equipo.name}</p>
+          </div>
+          {periodo !== "todos" && (
+            <span className="shrink-0 rounded-full border border-primary/30 bg-primary/8 px-2.5 py-0.5 text-xs font-medium text-primary">
+              {PERIODO_LABELS[periodo]}
+            </span>
+          )}
+        </div>
+
+        {/* Filtro de período */}
+        <div className="mt-4">
+          <PeriodoFilter
+            periodoActivo={periodo}
+            desdeActivo={desde}
+            hastaActivo={hasta}
+          />
+        </div>
       </div>
 
       {/* ── Resumen financiero ─────────────────────────────────────────── */}
