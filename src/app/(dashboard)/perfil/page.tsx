@@ -22,6 +22,7 @@ import {
 import { getCurrentUser } from "@/lib/auth"
 import { getMySituacion } from "@/services/perfilService"
 import { SignOutButton } from "@/components/shared/SignOutButton"
+import { EditNombreButton } from "@/components/shared/EditNombreButton"
 import { Card, CardContent } from "@/components/ui/card"
 import { buttonVariants } from "@/components/ui/button"
 import { formatCurrency, formatDate, cn } from "@/lib/utils"
@@ -64,9 +65,12 @@ export default async function PerfilPage() {
             </div>
           )}
           <div>
-            <h1 className="text-xl font-bold tracking-tight">
-              {user.name ?? "Sin nombre"}
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold tracking-tight">
+                {user.name ?? "Sin nombre"}
+              </h1>
+              <EditNombreButton nombreActual={user.name ?? ""} />
+            </div>
             <p className="text-sm text-muted-foreground">{user.email}</p>
           </div>
         </div>

@@ -4,6 +4,14 @@
 
 import { z } from "zod"
 
+export const EXPENSE_CATEGORY_LABELS = {
+  ENTRENADOR:   "Entrenador",
+  CANCHA:       "Cancha",
+  ARBITROS:     "Árbitros",
+  INDUMENTARIA: "Indumentaria",
+  OTRO:         "Otro",
+} as const
+
 export const createGastoSchema = z.object({
   concept: z
     .string()
@@ -27,6 +35,8 @@ export const createGastoSchema = z.object({
     .string()
     .min(1, "La fecha es requerida")
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de fecha inválido"),
+
+  category: z.enum(["ENTRENADOR", "CANCHA", "ARBITROS", "INDUMENTARIA", "OTRO"]),
 })
 
 export type CreateGastoInput = z.infer<typeof createGastoSchema>

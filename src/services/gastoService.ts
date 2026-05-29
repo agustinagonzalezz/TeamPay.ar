@@ -49,6 +49,7 @@ export async function createGasto(
         amount: String(input.amount),
         paidTo: input.paidTo.trim(),
         paidAt: new Date(input.paidAt),
+        // category: input.category ?? "OTRO", // TODO: descomentar tras correr migración prisma
       },
     })
 
@@ -87,6 +88,38 @@ export async function getGastosByTeam(
   } catch (error) {
     console.error("[gastoService.getGastosByTeam]", error)
     return { success: false, error: "No se pudieron cargar los gastos." }
+  }
+}
+
+// ── updateGasto ───────────────────────────────────────────────────────────────
+
+export async function updateGasto(
+  gastoId: string,
+  teamId: string,
+  input: Partial<CreateGastoInput>,
+  userId: string
+): Promise<ServiceResult<Expense>> {
+  try {
+    if (!(await isCapitana(teamId, userId))) {
+      return { success: false, error: "Solo la capitana puede editar gastos." }
+    }
+    const gasto = await prisma.expense.findFirst({ where: { id: gastoId, teamId } })
+    if (!gasto) return { success: false, error: "Gasto no encontrado." }
+
+    const updated = await prisma.expense.update({
+      where: { id: gastoId },
+      data: {
+        ...(input.concept && { concept: input.concept.trim() }),
+        ...(input.amount != null && { amount: String(input.amount) }),
+        ...(input.paidTo && { paidTo: input.paidTo.trim() }),
+        ...(input.paidAt && { paidAt: new Date(input.paidAt) }),
+        // ...(input.category && { category: input.category }), // TODO: descomentar tras migración
+      },
+    })
+    return { success: true, data: updated }
+  } catch (error) {
+    console.error("[gastoService.updateGasto]", error)
+    return { success: false, error: "No se pudo actualizar el gasto." }
   }
 }
 

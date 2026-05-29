@@ -36,3 +36,6 @@ export const createEventoSchema = z.object({
 })
 
 export type CreateEventoInput = z.infer<typeof createEventoSchema>
+
+export const updateEventoSchema = createEventoSchema.partial()
+export type UpdateEventoInput = z.infer<typeof updateEventoSchema>

@@ -18,6 +18,7 @@ import { useState } from "react"
 import {
   createGastoSchema,
   type CreateGastoInput,
+  EXPENSE_CATEGORY_LABELS,
 } from "@/lib/validations/gasto"
 import {
   Form,
@@ -54,6 +55,7 @@ export function GastoForm({ equipoId }: GastoFormProps) {
       amount: 0,
       paidTo: "",
       paidAt: todayString(),
+      category: "OTRO",
     },
   })
 
@@ -87,7 +89,7 @@ export function GastoForm({ equipoId }: GastoFormProps) {
       }
 
       // Limpiar el formulario y refrescar la lista
-      form.reset({ concept: "", amount: 0, paidTo: "", paidAt: todayString() })
+      form.reset({ concept: "", amount: 0, paidTo: "", paidAt: todayString(), category: "OTRO" })
       router.refresh()
     } catch {
       setServerError("No se pudo conectar con el servidor.")
@@ -180,24 +182,43 @@ export function GastoForm({ equipoId }: GastoFormProps) {
             />
           </div>
 
-          {/* A quién se pagó */}
-          <FormField
-            control={form.control}
-            name="paidTo"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Pagado a *</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="Ej: Profe Martín / Club Atlético"
-                    autoComplete="off"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {/* Fila: Categoría + A quién */}
+          <div className="flex gap-3">
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem className="flex-1">
+                  <FormLabel>Categoría</FormLabel>
+                  <FormControl>
+                    <select
+                      className={cn("h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50")}
+                      {...field}
+                    >
+                      {Object.entries(EXPENSE_CATEGORY_LABELS).map(([v, l]) => (
+                        <option key={v} value={v}>{l}</option>
+                      ))}
+                    </select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="paidTo"
+              render={({ field }) => (
+                <FormItem className="flex-1">
+                  <FormLabel>Pagado a *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ej: Profe Martín" autoComplete="off" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
           <div className="flex items-center gap-3 pt-1">
             <Button type="submit" disabled={isSubmitting}>

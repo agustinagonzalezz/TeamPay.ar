@@ -13,6 +13,7 @@ import { getGastosByTeam } from "@/services/gastoService"
 import { getTeamById } from "@/services/teamService"
 import { GastoForm } from "@/components/gastos/GastoForm"
 import { DeleteGastoButton } from "@/components/gastos/DeleteGastoButton"
+import { EditGastoButton } from "@/components/gastos/EditGastoButton"
 import { Card, CardContent } from "@/components/ui/card"
 import { buttonVariants } from "@/components/ui/button"
 import { formatCurrency, formatDateShort, cn } from "@/lib/utils"
@@ -134,17 +135,27 @@ export default async function GastosPage({
                     </span>
                   </div>
 
-                  {/* Monto + botón eliminar */}
+                  {/* Monto + acciones */}
                   <div className="flex items-center gap-2 shrink-0">
                     <span className="text-sm font-semibold tabular-nums">
                       {formatCurrency(Number(gasto.amount))}
                     </span>
                     {esCapitana && (
-                      <DeleteGastoButton
-                        gastoId={gasto.id}
-                        equipoId={equipoId}
-                        concepto={gasto.concept}
-                      />
+                      <>
+                        <EditGastoButton
+                          equipoId={equipoId}
+                          gastoId={gasto.id}
+                          concepto={gasto.concept}
+                          monto={Number(gasto.amount)}
+                          paidTo={gasto.paidTo}
+                          paidAt={gasto.paidAt.toISOString().split("T")[0]}
+                        />
+                        <DeleteGastoButton
+                          gastoId={gasto.id}
+                          equipoId={equipoId}
+                          concepto={gasto.concept}
+                        />
+                      </>
                     )}
                   </div>
                 </li>

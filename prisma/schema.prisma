@@ -47,6 +47,15 @@ enum EventType {
   OTRO      // Cualquier otro evento con costo
 }
 
+/// Categoría de gasto operativo del equipo (RF-36).
+enum ExpenseCategory {
+  ENTRENADOR
+  CANCHA
+  ARBITROS
+  INDUMENTARIA
+  OTRO
+}
+
 /// Estado del pago de una jugadora para un evento específico.
 enum ParticipantStatus {
   PENDIENTE // No pagó todavía
@@ -153,12 +162,16 @@ model Team {
 /// Perfil de una jugadora dentro de un equipo.
 /// userId es null si la jugadora aún no se registró en la app.
 model TeamMember {
-  id     String           @id @default(cuid())
-  teamId String
-  name   String
-  status TeamMemberStatus @default(ACTIVA)
+  id          String           @id @default(cuid())
+  teamId      String
+  name        String
+  status      TeamMemberStatus @default(ACTIVA)
   /// Vinculación opcional con un User registrado
-  userId String?
+  userId      String?
+  /// Datos opcionales de la jugadora (RF-13)
+  phone       String?
+  position    String?
+  shirtNumber Int?
 
   team                Team               @relation(fields: [teamId], references: [id], onDelete: Cascade)
   user                User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
@@ -240,13 +253,14 @@ model Payment {
 /// Gasto del equipo (entrenador, alquiler de cancha, etc.).
 /// No está ligado a un Event específico — es un gasto operativo del equipo.
 model Expense {
-  id      String   @id @default(cuid())
-  teamId  String
-  concept String
-  amount  Decimal  @db.Decimal(12, 2)
+  id       String          @id @default(cuid())
+  teamId   String
+  concept  String
+  amount   Decimal         @db.Decimal(12, 2)
   /// Nombre o descripción de a quién se le pagó
-  paidTo  String
-  paidAt  DateTime
+  paidTo   String
+  paidAt   DateTime
+  category ExpenseCategory @default(OTRO)
 
   team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
 

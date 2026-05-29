@@ -15,6 +15,7 @@ import { getTeamById } from "@/services/teamService"
 import { getJugadorasByTeam } from "@/services/jugadoraService"
 import { AddJugadoraForm } from "@/components/jugadoras/AddJugadoraForm"
 import { RemoveJugadoraButton } from "@/components/jugadoras/RemoveJugadoraButton"
+import { EditJugadoraButton } from "@/components/jugadoras/EditJugadoraButton"
 import { CopyInviteLinkButton } from "@/components/equipos/CopyInviteLinkButton"
 import { Card } from "@/components/ui/card"
 import { buttonVariants } from "@/components/ui/button"
@@ -111,6 +112,13 @@ export default async function JugadorasPage({
                   <div className="flex flex-1 items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium">{jugadora.name}</span>
+                      {esCapitana && (
+                        <EditJugadoraButton
+                          equipoId={equipoId}
+                          jugadoraId={jugadora.id}
+                          nombreActual={jugadora.name}
+                        />
+                      )}
                       {esLaCapitana && (
                         <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
                           Capitana

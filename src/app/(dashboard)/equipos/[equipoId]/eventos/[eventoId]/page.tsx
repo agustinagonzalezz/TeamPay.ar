@@ -8,7 +8,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
-import { ArrowLeft, Copy } from "lucide-react"
+import { ArrowLeft, Copy, Pencil } from "lucide-react"
 import { getCurrentUser } from "@/lib/auth"
 import { getEventoById, checkIsCapitana } from "@/services/eventoService"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -78,14 +78,23 @@ export default async function EventoPage({
             </div>
           </div>
           {isCapitana && (
-            <Link
-              href={`/equipos/${equipoId}/eventos/nuevo?duplicar=${eventoId}`}
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "shrink-0")}
-              title="Crear un nuevo evento con los mismos datos"
-            >
-              <Copy className="size-4" aria-hidden="true" />
-              Duplicar
-            </Link>
+            <div className="flex shrink-0 gap-2">
+              <Link
+                href={`/equipos/${equipoId}/eventos/${eventoId}/editar`}
+                className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+              >
+                <Pencil className="size-4" aria-hidden="true" />
+                Editar
+              </Link>
+              <Link
+                href={`/equipos/${equipoId}/eventos/nuevo?duplicar=${eventoId}`}
+                className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+                title="Crear un nuevo evento con los mismos datos"
+              >
+                <Copy className="size-4" aria-hidden="true" />
+                Duplicar
+              </Link>
+            </div>
           )}
         </div>
       </div>

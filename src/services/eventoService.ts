@@ -6,7 +6,7 @@
  */
 
 import { prisma } from "@/lib/prisma"
-import type { CreateEventoInput } from "@/lib/validations/evento"
+import type { CreateEventoInput, UpdateEventoInput } from "@/lib/validations/evento"
 import type {
   Event,
   EventParticipant,
@@ -196,6 +196,75 @@ export async function getEventoById(
   } catch (error) {
     console.error("[eventoService.getEventoById]", error)
     return { success: false, error: "No se pudo cargar el evento." }
+  }
+}
+
+// ── updateEvento ──────────────────────────────────────────────────────────────
+
+export async function updateEvento(
+  eventoId: string,
+  teamId: string,
+  input: UpdateEventoInput,
+  userId: string,
+  playerCount: number
+): Promise<ServiceResult<Event>> {
+  try {
+    if (!(await isCapitana(teamId, userId))) {
+      return { success: false, error: "Solo la capitana puede editar eventos." }
+    }
+
+    const evento = await prisma.event.findFirst({ where: { id: eventoId, teamId } })
+    if (!evento) return { success: false, error: "Evento no encontrado." }
+
+    const amountPerPlayer =
+      input.totalAmount != null && playerCount > 0
+        ? Math.round(input.totalAmount / playerCount)
+        : undefined
+
+    const updated = await prisma.event.update({
+      where: { id: eventoId },
+      data: {
+        ...(input.name && { name: input.name.trim() }),
+        ...(input.type && { type: input.type }),
+        ...(amountPerPlayer != null && { amountPerPlayer }),
+        ...(input.dueDate && { dueDate: new Date(input.dueDate + "T12:00:00") }),
+      },
+    })
+    return { success: true, data: updated }
+  } catch (error) {
+    console.error("[eventoService.updateEvento]", error)
+    return { success: false, error: "No se pudo actualizar el evento." }
+  }
+}
+
+// ── deleteEvento ──────────────────────────────────────────────────────────────
+
+export async function deleteEvento(
+  eventoId: string,
+  teamId: string,
+  userId: string
+): Promise<ServiceResult<null>> {
+  try {
+    if (!(await isCapitana(teamId, userId))) {
+      return { success: false, error: "Solo la capitana puede eliminar eventos." }
+    }
+
+    const evento = await prisma.event.findFirst({ where: { id: eventoId, teamId } })
+    if (!evento) return { success: false, error: "Evento no encontrado." }
+
+    // Solo eliminar si no hay pagos registrados
+    const paymentCount = await prisma.payment.count({
+      where: { eventParticipant: { eventId: eventoId } },
+    })
+    if (paymentCount > 0) {
+      return { success: false, error: "No se puede eliminar un evento con pagos registrados." }
+    }
+
+    await prisma.event.delete({ where: { id: eventoId } })
+    return { success: true, data: null }
+  } catch (error) {
+    console.error("[eventoService.deleteEvento]", error)
+    return { success: false, error: "No se pudo eliminar el evento." }
   }
 }
 

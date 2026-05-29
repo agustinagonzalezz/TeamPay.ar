@@ -216,6 +216,34 @@ export async function joinTeam(
  * Solo la capitana puede hacerlo.
  * No se puede dar de baja a la propia capitana.
  */
+// ── updateJugadora ────────────────────────────────────────────────────────────
+
+export async function updateJugadora(
+  jugadoraId: string,
+  teamId: string,
+  name: string,
+  userId: string
+): Promise<ServiceResult<TeamMember>> {
+  try {
+    if (!(await isCapitana(teamId, userId))) {
+      return { success: false, error: "Solo la capitana puede editar jugadoras." }
+    }
+    const member = await prisma.teamMember.findFirst({ where: { id: jugadoraId, teamId } })
+    if (!member) return { success: false, error: "Jugadora no encontrada." }
+
+    const updated = await prisma.teamMember.update({
+      where: { id: jugadoraId },
+      data: { name: name.trim() },
+    })
+    return { success: true, data: updated }
+  } catch (error) {
+    console.error("[jugadoraService.updateJugadora]", error)
+    return { success: false, error: "No se pudo actualizar la jugadora." }
+  }
+}
+
+// ── removeJugadora ────────────────────────────────────────────────────────────
+
 export async function removeJugadora(
   jugadoraId: string,
   teamId: string,

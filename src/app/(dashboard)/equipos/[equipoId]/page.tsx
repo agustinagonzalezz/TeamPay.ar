@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
-import { ArrowLeft, Plus, TrendingUp } from "lucide-react"
+import { ArrowLeft, Plus, TrendingUp, Settings } from "lucide-react"
 import { getCurrentUser } from "@/lib/auth"
 import { getTeamDetails } from "@/services/teamService"
 import { getEventosByTeam } from "@/services/eventoService"
@@ -103,12 +103,24 @@ export default async function EquipoPage({
 
         {/* Contenido */}
         <div className="relative flex flex-col gap-3">
-          <h1
-            className="text-5xl font-black leading-none tracking-tight sm:text-6xl lg:text-7xl"
-            style={{ fontFamily: "var(--font-barlow)", color: "oklch(0.99 0 0)" }}
-          >
-            {equipo.name.toUpperCase()}
-          </h1>
+          <div className="flex items-start justify-between gap-4">
+            <h1
+              className="text-5xl font-black leading-none tracking-tight sm:text-6xl lg:text-7xl"
+              style={{ fontFamily: "var(--font-barlow)", color: "oklch(0.99 0 0)" }}
+            >
+              {equipo.name.toUpperCase()}
+            </h1>
+            {esCapitana && (
+              <Link
+                href={`/equipos/${equipoId}/editar`}
+                className="shrink-0 rounded-lg p-2 transition-colors hover:bg-white/10"
+                title="Editar equipo"
+                aria-label="Editar equipo"
+              >
+                <Settings className="size-5" style={{ color: "oklch(0.99 0 0 / 0.6)" }} aria-hidden="true" />
+              </Link>
+            )}
+          </div>
 
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
             {equipo.description && (

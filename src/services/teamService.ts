@@ -3,7 +3,7 @@
  */
 
 import { prisma } from "@/lib/prisma"
-import type { CreateTeamInput } from "@/lib/validations/team"
+import type { CreateTeamInput, UpdateTeamInput } from "@/lib/validations/team"
 import type { Team, TeamMember } from "@/generated/prisma/client"
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
@@ -155,6 +155,49 @@ export async function getTeamPublicInfo(
   } catch (error) {
     console.error("[teamService.getTeamPublicInfo]", error)
     return { success: false, error: "No se pudo cargar el equipo." }
+  }
+}
+
+// ── updateTeam ────────────────────────────────────────────────────────────────
+
+export async function updateTeam(
+  teamId: string,
+  input: UpdateTeamInput,
+  userId: string
+): Promise<ServiceResult<Team>> {
+  try {
+    const team = await prisma.team.findFirst({ where: { id: teamId, ownerId: userId } })
+    if (!team) return { success: false, error: "Solo la capitana puede editar el equipo." }
+
+    const updated = await prisma.team.update({
+      where: { id: teamId },
+      data: {
+        ...(input.name && { name: input.name.trim() }),
+        description: input.description?.trim() || null,
+      },
+    })
+    return { success: true, data: updated }
+  } catch (error) {
+    console.error("[teamService.updateTeam]", error)
+    return { success: false, error: "No se pudo actualizar el equipo." }
+  }
+}
+
+// ── deleteTeam ────────────────────────────────────────────────────────────────
+
+export async function deleteTeam(
+  teamId: string,
+  userId: string
+): Promise<ServiceResult<null>> {
+  try {
+    const team = await prisma.team.findFirst({ where: { id: teamId, ownerId: userId } })
+    if (!team) return { success: false, error: "Solo la capitana puede eliminar el equipo." }
+
+    await prisma.team.delete({ where: { id: teamId } })
+    return { success: true, data: null }
+  } catch (error) {
+    console.error("[teamService.deleteTeam]", error)
+    return { success: false, error: "No se pudo eliminar el equipo." }
   }
 }
 
