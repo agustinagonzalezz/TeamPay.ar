@@ -49,6 +49,8 @@ interface CostItem {
 interface NuevoEventoFormProps {
   equipoId: string
   playerCount: number
+  isDuplicate?: boolean
+  defaultValues?: Partial<CreateEventoInput>
 }
 
 // ── Helper ────────────────────────────────────────────────────────────────────
@@ -59,7 +61,7 @@ function todayString() {
 
 // ── Componente ────────────────────────────────────────────────────────────────
 
-export function NuevoEventoForm({ equipoId, playerCount }: NuevoEventoFormProps) {
+export function NuevoEventoForm({ equipoId, playerCount, isDuplicate = false, defaultValues }: NuevoEventoFormProps) {
   const router = useRouter()
   const [serverError, setServerError] = useState<string | null>(null)
 
@@ -74,7 +76,12 @@ export function NuevoEventoForm({ equipoId, playerCount }: NuevoEventoFormProps)
   // ── Formulario principal ──────────────────────────────────────────────────
   const form = useForm<CreateEventoInput>({
     resolver: zodResolver(createEventoSchema),
-    defaultValues: { name: "", type: "CUOTA", totalAmount: 0, dueDate: todayString() },
+    defaultValues: {
+      name: defaultValues?.name ?? "",
+      type: defaultValues?.type ?? "CUOTA",
+      totalAmount: defaultValues?.totalAmount ?? 0,
+      dueDate: defaultValues?.dueDate ?? todayString(),
+    },
   })
 
   const { isSubmitting } = form.formState
@@ -170,9 +177,13 @@ export function NuevoEventoForm({ equipoId, playerCount }: NuevoEventoFormProps)
           <ArrowLeft className="size-4" />
           Volver al equipo
         </Link>
-        <h1 className="text-2xl font-bold tracking-tight">Nuevo evento</h1>
+        <h1 className="text-2xl font-bold tracking-tight">
+          {isDuplicate ? "Duplicar evento" : "Nuevo evento"}
+        </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Ingresá el costo total o desglosá por concepto — la app divide entre las jugadoras automáticamente.
+          {isDuplicate
+            ? "Revisá los datos, ajustá la fecha y creá el nuevo evento."
+            : "Ingresá el costo total o desglosá por concepto — la app divide entre las jugadoras automáticamente."}
         </p>
       </div>
 
@@ -398,7 +409,7 @@ export function NuevoEventoForm({ equipoId, playerCount }: NuevoEventoFormProps)
             <div className="flex gap-3 pt-2">
               <Button type="submit" disabled={isSubmitting || playerCount === 0}>
                 {isSubmitting && <Loader2 className="size-4 animate-spin" />}
-                {isSubmitting ? "Creando..." : "Crear evento"}
+                {isSubmitting ? "Creando..." : isDuplicate ? "Crear copia" : "Crear evento"}
               </Button>
               <Button type="button" variant="outline" disabled={isSubmitting}
                 onClick={() => router.push(`/equipos/${equipoId}`)}>

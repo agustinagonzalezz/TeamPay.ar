@@ -199,6 +199,54 @@ export async function getEventoById(
   }
 }
 
+// ── getEventoForDuplication ───────────────────────────────────────────────────
+
+/** Campos mínimos del evento fuente para pre-rellenar el formulario de duplicación. */
+export type EventoSourceData = {
+  name: string
+  type: string
+  amountPerPlayer: number
+  dueDate: Date
+}
+
+export async function getEventoForDuplication(
+  eventoId: string,
+  teamId: string,
+  userId: string
+): Promise<ServiceResult<EventoSourceData>> {
+  try {
+    const membership = await prisma.teamMember.findFirst({
+      where: { teamId, userId, status: "ACTIVA" },
+      select: { id: true },
+    })
+    if (!membership) {
+      return { success: false, error: "Sin acceso al equipo." }
+    }
+
+    const evento = await prisma.event.findFirst({
+      where: { id: eventoId, teamId },
+      select: { name: true, type: true, amountPerPlayer: true, dueDate: true },
+    })
+
+    if (!evento) {
+      return { success: false, error: "Evento no encontrado." }
+    }
+
+    return {
+      success: true,
+      data: {
+        name: evento.name,
+        type: evento.type,
+        amountPerPlayer: Number(evento.amountPerPlayer),
+        dueDate: evento.dueDate,
+      },
+    }
+  } catch (error) {
+    console.error("[eventoService.getEventoForDuplication]", error)
+    return { success: false, error: "No se pudo cargar el evento." }
+  }
+}
+
 // ── updateParticipantStatus ───────────────────────────────────────────────────
 
 /**

@@ -8,7 +8,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Copy } from "lucide-react"
 import { getCurrentUser } from "@/lib/auth"
 import { getEventoById, checkIsCapitana } from "@/services/eventoService"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -66,7 +66,7 @@ export default async function EventoPage({
           Volver al equipo
         </Link>
 
-        <div className="flex items-start gap-3">
+        <div className="flex items-start justify-between gap-3">
           <div className="flex-1">
             <h1 className="text-2xl font-bold tracking-tight">{evento.name}</h1>
             <div className="mt-1.5 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
@@ -77,6 +77,16 @@ export default async function EventoPage({
               <span>Vence {formatDate(evento.dueDate)}</span>
             </div>
           </div>
+          {isCapitana && (
+            <Link
+              href={`/equipos/${equipoId}/eventos/nuevo?duplicar=${eventoId}`}
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "shrink-0")}
+              title="Crear un nuevo evento con los mismos datos"
+            >
+              <Copy className="size-4" aria-hidden="true" />
+              Duplicar
+            </Link>
+          )}
         </div>
       </div>
 
