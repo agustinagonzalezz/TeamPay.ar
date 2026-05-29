@@ -19,11 +19,11 @@ type ServiceResult<T> =
 // ── isCapitana ────────────────────────────────────────────────────────────────
 
 async function isCapitana(teamId: string, userId: string): Promise<boolean> {
-  const team = await prisma.team.findFirst({
-    where: { id: teamId, ownerId: userId },
-    select: { id: true },
-  })
-  return !!team
+  const [team, member] = await Promise.all([
+    prisma.team.findFirst({ where: { id: teamId, ownerId: userId }, select: { id: true } }),
+    prisma.teamMember.findFirst({ where: { teamId, userId, status: "ACTIVA", isCoCapitana: true }, select: { id: true } }),
+  ])
+  return !!(team || member)
 }
 
 // ── createGasto ───────────────────────────────────────────────────────────────
@@ -49,7 +49,7 @@ export async function createGasto(
         amount: String(input.amount),
         paidTo: input.paidTo.trim(),
         paidAt: new Date(input.paidAt),
-        // category: input.category ?? "OTRO", // TODO: descomentar tras correr migración prisma
+        category: input.category ?? "OTRO", // TODO: descomentar tras correr migración prisma
       },
     })
 
@@ -113,7 +113,7 @@ export async function updateGasto(
         ...(input.amount != null && { amount: String(input.amount) }),
         ...(input.paidTo && { paidTo: input.paidTo.trim() }),
         ...(input.paidAt && { paidAt: new Date(input.paidAt) }),
-        // ...(input.category && { category: input.category }), // TODO: descomentar tras migración
+        ...(input.category && { category: input.category }), // TODO: descomentar tras migración
       },
     })
     return { success: true, data: updated }

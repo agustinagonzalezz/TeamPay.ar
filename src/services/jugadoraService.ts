@@ -19,11 +19,11 @@ type ServiceResult<T> =
  * Verifica si el usuario es la capitana (owner) del equipo.
  */
 async function isCapitana(teamId: string, userId: string): Promise<boolean> {
-  const team = await prisma.team.findFirst({
-    where: { id: teamId, ownerId: userId },
-    select: { id: true },
-  })
-  return !!team
+  const [team, member] = await Promise.all([
+    prisma.team.findFirst({ where: { id: teamId, ownerId: userId }, select: { id: true } }),
+    prisma.teamMember.findFirst({ where: { teamId, userId, status: "ACTIVA", isCoCapitana: true }, select: { id: true } }),
+  ])
+  return !!(team || member)
 }
 
 // ── getJugadorasByTeam ────────────────────────────────────────────────────────
@@ -216,6 +216,50 @@ export async function joinTeam(
  * Solo la capitana puede hacerlo.
  * No se puede dar de baja a la propia capitana.
  */
+// ── setCoCapitana ─────────────────────────────────────────────────────────────
+
+/**
+ * Promueve o revoca el rol de co-capitana en un miembro activo.
+ * Solo la capitana PRINCIPAL (ownerId) puede hacer esto.
+ * Límite: máximo 1 co-capitana activa por equipo (2 en total con la principal).
+ */
+export async function setCoCapitana(
+  memberId: string,
+  teamId: string,
+  value: boolean,
+  userId: string
+): Promise<ServiceResult<TeamMember>> {
+  try {
+    // Solo la capitana PRINCIPAL puede promover — no la co-capitana
+    const team = await prisma.team.findFirst({ where: { id: teamId, ownerId: userId } })
+    if (!team) return { success: false, error: "Solo la capitana principal puede gestionar co-capitanas." }
+
+    const member = await prisma.teamMember.findFirst({
+      where: { id: memberId, teamId, status: "ACTIVA" },
+    })
+    if (!member) return { success: false, error: "Jugadora no encontrada." }
+    if (member.userId === userId) return { success: false, error: "No podés cambiar tu propio rol." }
+    if (!member.userId) return { success: false, error: "La jugadora debe tener cuenta registrada para ser co-capitana." }
+
+    if (value) {
+      // Verificar que no haya ya una co-capitana
+      const existing = await prisma.teamMember.findFirst({
+        where: { teamId, isCoCapitana: true, status: "ACTIVA", NOT: { id: memberId } },
+      })
+      if (existing) return { success: false, error: "Ya hay una co-capitana en este equipo. Primero removela." }
+    }
+
+    const updated = await prisma.teamMember.update({
+      where: { id: memberId },
+      data: { isCoCapitana: value },
+    })
+    return { success: true, data: updated }
+  } catch (error) {
+    console.error("[jugadoraService.setCoCapitana]", error)
+    return { success: false, error: "No se pudo actualizar el rol." }
+  }
+}
+
 // ── updateJugadora ────────────────────────────────────────────────────────────
 
 export async function updateJugadora(

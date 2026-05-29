@@ -16,6 +16,7 @@ import { getJugadorasByTeam } from "@/services/jugadoraService"
 import { AddJugadoraForm } from "@/components/jugadoras/AddJugadoraForm"
 import { RemoveJugadoraButton } from "@/components/jugadoras/RemoveJugadoraButton"
 import { EditJugadoraButton } from "@/components/jugadoras/EditJugadoraButton"
+import { CoCapitanaButton } from "@/components/jugadoras/CoCapitanaButton"
 import { CopyInviteLinkButton } from "@/components/equipos/CopyInviteLinkButton"
 import { Card } from "@/components/ui/card"
 import { buttonVariants } from "@/components/ui/button"
@@ -41,6 +42,7 @@ export default async function JugadorasPage({
 
   const equipo = teamResult.data
   const esCapitana = equipo.ownerId === user.id
+  const esCapitanaPrincipal = equipo.ownerId === user.id  // solo el owner puede gestionar co-capitanas
 
   // Obtener jugadoras
   const jugadorasResult = await getJugadorasByTeam(equipoId, user.id)
@@ -124,21 +126,37 @@ export default async function JugadorasPage({
                           Capitana
                         </span>
                       )}
-                      {jugadora.userId && !esLaCapitana && (
+                      {jugadora.isCoCapitana && !esLaCapitana && (
+                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                          Capitana
+                        </span>
+                      )}
+                      {jugadora.userId && !esLaCapitana && !jugadora.isCoCapitana && (
                         <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
                           Con cuenta
                         </span>
                       )}
                     </div>
 
-                    {/* Botón de baja: solo capitana, no sobre sí misma */}
-                    {esCapitana && !esLaCapitana && (
-                      <RemoveJugadoraButton
-                        equipoId={equipoId}
-                        jugadoraId={jugadora.id}
-                        jugadoraName={jugadora.name}
-                      />
-                    )}
+                    <div className="flex items-center gap-1.5">
+                      {/* Botón co-capitana: solo capitana principal, sobre miembros con cuenta */}
+                      {esCapitanaPrincipal && !esLaCapitana && jugadora.userId && (
+                        <CoCapitanaButton
+                          equipoId={equipoId}
+                          jugadoraId={jugadora.id}
+                          jugadoraName={jugadora.name}
+                          isCoCapitana={jugadora.isCoCapitana}
+                        />
+                      )}
+                      {/* Botón de baja: solo capitana, no sobre sí misma */}
+                      {esCapitana && !esLaCapitana && (
+                        <RemoveJugadoraButton
+                          equipoId={equipoId}
+                          jugadoraId={jugadora.id}
+                          jugadoraName={jugadora.name}
+                        />
+                      )}
+                    </div>
                   </div>
                 </li>
               )

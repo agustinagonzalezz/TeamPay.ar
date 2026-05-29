@@ -172,6 +172,8 @@ model TeamMember {
   phone       String?
   position    String?
   shirtNumber Int?
+  /// Co-capitana — mismos permisos que la capitana principal, excepto borrar equipo
+  isCoCapitana Boolean @default(false)
 
   team                Team               @relation(fields: [teamId], references: [id], onDelete: Cascade)
   user                User?              @relation(fields: [userId], references: [id], onDelete: SetNull)

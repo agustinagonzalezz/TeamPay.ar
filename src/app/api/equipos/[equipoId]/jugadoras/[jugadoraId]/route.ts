@@ -7,13 +7,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { getCurrentUser } from "@/lib/auth"
-import { removeJugadora, updateJugadora } from "@/services/jugadoraService"
+import { removeJugadora, updateJugadora, setCoCapitana } from "@/services/jugadoraService"
 
 type RouteParams = { params: Promise<{ equipoId: string; jugadoraId: string }> }
 
-const updateSchema = z.object({
-  name: z.string().min(2, "Mínimo 2 caracteres").max(60).trim(),
-})
+const updateSchema = z.union([
+  z.object({ name: z.string().min(2, "Mínimo 2 caracteres").max(60).trim() }),
+  z.object({ isCoCapitana: z.boolean() }),
+])
 
 export async function PATCH(req: NextRequest, { params }: RouteParams) {
   const user = await getCurrentUser()
@@ -26,7 +27,14 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ success: false, fieldErrors: parsed.error.flatten().fieldErrors }, { status: 422 })
   }
 
-  const result = await updateJugadora(jugadoraId, equipoId, parsed.data.name, user.id)
+  const data = parsed.data
+  if ("isCoCapitana" in data) {
+    const result = await setCoCapitana(jugadoraId, equipoId, data.isCoCapitana, user.id)
+    if (!result.success) return NextResponse.json(result, { status: 403 })
+    return NextResponse.json(result)
+  }
+
+  const result = await updateJugadora(jugadoraId, equipoId, data.name, user.id)
   if (!result.success) return NextResponse.json(result, { status: 403 })
   return NextResponse.json(result)
 }

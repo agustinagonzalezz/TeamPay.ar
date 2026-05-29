@@ -222,11 +222,11 @@ export default async function EquipoPage({
                   >
                     {member.name.slice(0, 2).toUpperCase()}
                   </div>
-                  {esLaCapitana && (
+                  {(esLaCapitana || member.isCoCapitana) && (
                     <span
                       className="absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full text-[8px] ring-2 ring-background"
                       style={{ background: "oklch(0.52 0.22 285)", color: "oklch(0.99 0 0)" }}
-                      aria-label="Capitana"
+                      aria-label={esLaCapitana ? "Capitana" : "Co-capitana"}
                     >
                       ★
                     </span>

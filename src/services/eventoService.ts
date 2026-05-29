@@ -37,11 +37,11 @@ export type EventoDetails = Event & {
 // ── isCapitana ────────────────────────────────────────────────────────────────
 
 async function isCapitana(teamId: string, userId: string): Promise<boolean> {
-  const team = await prisma.team.findFirst({
-    where: { id: teamId, ownerId: userId },
-    select: { id: true },
-  })
-  return !!team
+  const [team, member] = await Promise.all([
+    prisma.team.findFirst({ where: { id: teamId, ownerId: userId }, select: { id: true } }),
+    prisma.teamMember.findFirst({ where: { teamId, userId, status: "ACTIVA", isCoCapitana: true }, select: { id: true } }),
+  ])
+  return !!(team || member)
 }
 
 /** Versión pública para usar en Server Components de página. */
