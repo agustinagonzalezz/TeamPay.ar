@@ -1,39 +1,19 @@
 "use client"
 
-/**
- * src/components/eventos/ParticipantRow.tsx
- *
- * Fila de participante en la página de detalle de un evento.
- * Muestra el nombre, estado de pago y (si es la capitana) botones de acción.
- *
- * UX de pago (solo para la capitana):
- *   PENDIENTE → botón "Pagó" (marca como PAGO) + botón "Eximida"
- *   PAGO      → botón de deshacer (↩) vuelve a PENDIENTE
- *   EXIMIDA   → botón de deshacer (↩) vuelve a PENDIENTE
- *
- * Usa actualización optimista: el estado local cambia de inmediato y se
- * revierte si la API falla. Luego llama router.refresh() para sincronizar
- * el panel de estadísticas del Server Component.
- */
-
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { CheckCircle2, Clock, Loader2, MinusCircle, RotateCcw } from "lucide-react"
+import { CheckCircle2, Clock, Loader2, MinusCircle, Pencil, RotateCcw, X, Check } from "lucide-react"
 import { formatCurrency, cn } from "@/lib/utils"
 import type { ParticipantStatus } from "@/generated/prisma/client"
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
-/**
- * Versión serializable de ParticipantWithDetails.
- * Payment.amount se convierte a number antes de pasar como prop
- * (Prisma Decimal no es serializable entre Server → Client Components).
- */
 export type SerializedParticipant = {
   id: string
   eventId: string
   teamMemberId: string
   status: ParticipantStatus
+  customAmount: number | null  // RF-21
   createdAt: Date
   updatedAt: Date
   teamMember: { id: string; name: string }
@@ -45,8 +25,8 @@ interface ParticipantRowProps {
   equipoId: string
   eventoId: string
   isCapitana: boolean
-  /** amountPerPlayer del evento — para mostrar el monto en la UI optimista */
   amountPerPlayer: number
+  isClosed: boolean  // RF-24
 }
 
 // ── Componente ────────────────────────────────────────────────────────────────
@@ -57,6 +37,7 @@ export function ParticipantRow({
   eventoId,
   isCapitana,
   amountPerPlayer,
+  isClosed,
 }: ParticipantRowProps) {
   const router = useRouter()
 
@@ -64,46 +45,53 @@ export function ParticipantRow({
   const [paidAmount, setPaidAmount] = useState<number | null>(
     participant.payment ? Number(participant.payment.amount) : null
   )
+  const [customAmount, setCustomAmount] = useState<number | null>(participant.customAmount)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Sincronizar cuando el Server Component refresca los datos
+  // RF-30: input de monto al marcar como pagado
+  const [showAmountInput, setShowAmountInput] = useState(false)
+  const [inputAmount, setInputAmount] = useState("")
+
+  // RF-21: editar monto personalizado
+  const [editingCustom, setEditingCustom] = useState(false)
+  const [customInput, setCustomInput] = useState("")
+
   useEffect(() => {
     setStatus(participant.status)
     setPaidAmount(participant.payment ? Number(participant.payment.amount) : null)
-  }, [participant.status, participant.payment])
+    setCustomAmount(participant.customAmount)
+  }, [participant.status, participant.payment, participant.customAmount])
 
-  async function handleStatusChange(newStatus: ParticipantStatus) {
+  const effectiveAmount = customAmount ?? amountPerPlayer
+
+  // ── Actualizar status ──────────────────────────────────────────────────────
+
+  async function handleStatusChange(newStatus: ParticipantStatus, overrideAmount?: number) {
     if (isLoading) return
     setError(null)
-
-    // Guardar estado anterior para revertir en caso de error
     const prevStatus = status
     const prevAmount = paidAmount
 
-    // Actualización optimista
     setStatus(newStatus)
-    setPaidAmount(newStatus === "PAGO" ? amountPerPlayer : null)
+    setPaidAmount(newStatus === "PAGO" ? (overrideAmount ?? effectiveAmount) : null)
     setIsLoading(true)
 
     try {
+      const body: Record<string, unknown> = { status: newStatus }
+      if (newStatus === "PAGO" && overrideAmount != null) body.paidAmount = overrideAmount
+
       const res = await fetch(
         `/api/equipos/${equipoId}/eventos/${eventoId}/participantes/${participant.id}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: newStatus }),
-        }
+        { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }
       )
-      const data = (await res.json()) as { success: boolean; error?: string }
+      const data = await res.json() as { success: boolean; error?: string }
 
       if (!res.ok || !data.success) {
-        // Revertir al estado anterior
         setStatus(prevStatus)
         setPaidAmount(prevAmount)
         setError(data.error ?? "Error al actualizar")
       } else {
-        // Refrescar el Server Component para actualizar las estadísticas
         router.refresh()
       }
     } catch {
@@ -115,46 +103,136 @@ export function ParticipantRow({
     }
   }
 
+  // ── Pago con monto personalizado (RF-30) ───────────────────────────────────
+
+  function handlePayClick() {
+    const parsed = Number(inputAmount)
+    if (inputAmount && parsed > 0) {
+      handleStatusChange("PAGO", parsed)
+    } else {
+      handleStatusChange("PAGO")
+    }
+    setShowAmountInput(false)
+    setInputAmount("")
+  }
+
+  // ── Actualizar customAmount (RF-21) ────────────────────────────────────────
+
+  async function saveCustomAmount() {
+    const parsed = customInput === "" ? null : Number(customInput)
+    if (parsed !== null && (isNaN(parsed) || parsed <= 0)) {
+      setError("Monto inválido")
+      return
+    }
+    setEditingCustom(false)
+    setError(null)
+    setIsLoading(true)
+    const prev = customAmount
+    setCustomAmount(parsed)
+
+    try {
+      const res = await fetch(
+        `/api/equipos/${equipoId}/eventos/${eventoId}/participantes/${participant.id}`,
+        { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ customAmount: parsed }) }
+      )
+      const data = await res.json() as { success: boolean; error?: string }
+      if (!res.ok || !data.success) { setCustomAmount(prev); setError(data.error ?? "Error") }
+      else router.refresh()
+    } catch {
+      setCustomAmount(prev)
+      setError("Error de conexión")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <li className="flex flex-col px-4 py-3">
-      {/* Fila principal */}
       <div className="flex items-center gap-3">
         <StatusIcon status={status} />
 
         <div className="flex flex-1 items-center justify-between gap-2 min-w-0">
-          <span className="text-sm font-medium truncate">
-            {participant.teamMember.name}
-          </span>
+          <div className="flex min-w-0 flex-col">
+            <span className="text-sm font-medium truncate">{participant.teamMember.name}</span>
+
+            {/* Monto efectivo con edición (RF-21) */}
+            {status !== "EXIMIDA" && (
+              <div className="flex items-center gap-1 mt-0.5">
+                {editingCustom ? (
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs text-muted-foreground">$</span>
+                    <input
+                      autoFocus
+                      type="number"
+                      min="1"
+                      value={customInput}
+                      placeholder={String(amountPerPlayer)}
+                      onChange={(e) => setCustomInput(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") saveCustomAmount(); if (e.key === "Escape") setEditingCustom(false) }}
+                      className="h-5 w-24 rounded border border-input bg-background px-1.5 text-xs outline-none focus-visible:border-ring"
+                    />
+                    <button onClick={saveCustomAmount} className="text-primary"><Check className="size-3" /></button>
+                    <button onClick={() => setEditingCustom(false)} className="text-muted-foreground"><X className="size-3" /></button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1">
+                    <span className={cn("text-xs tabular-nums", customAmount ? "text-primary font-medium" : "text-muted-foreground")}>
+                      {formatCurrency(effectiveAmount)}
+                      {customAmount && <span className="ml-1 text-[10px] opacity-60">(personalizado)</span>}
+                    </span>
+                    {isCapitana && !isClosed && (
+                      <button
+                        onClick={() => { setCustomInput(customAmount ? String(customAmount) : ""); setEditingCustom(true) }}
+                        className="rounded p-0.5 text-muted-foreground/40 hover:text-primary"
+                        title="Personalizar monto"
+                      >
+                        <Pencil className="size-2.5" />
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           <div className="flex shrink-0 items-center gap-2">
-            {/* Monto pagado */}
             {status === "PAGO" && paidAmount !== null && (
-              <span className="text-sm font-semibold tabular-nums text-green-600 dark:text-green-400">
+              <span className="text-sm font-semibold tabular-nums text-green-600">
                 {formatCurrency(paidAmount)}
               </span>
             )}
 
-            {/* Badge de estado */}
             <StatusBadge status={status} />
 
-            {/* Acciones (solo capitana) */}
-            {isCapitana && (
+            {isCapitana && !isClosed && (
               <div className="flex items-center">
                 {isLoading ? (
                   <Loader2 className="size-4 animate-spin text-muted-foreground" />
                 ) : (
-                  <ActionButtons status={status} onChange={handleStatusChange} />
+                  <ActionButtons
+                    status={status}
+                    showAmountInput={showAmountInput}
+                    inputAmount={inputAmount}
+                    onInputAmountChange={setInputAmount}
+                    onPayClick={handlePayClick}
+                    onShowAmountInput={() => setShowAmountInput(true)}
+                    onCancelAmount={() => { setShowAmountInput(false); setInputAmount("") }}
+                    onChange={handleStatusChange}
+                  />
                 )}
               </div>
+            )}
+
+            {isClosed && status === "PENDIENTE" && (
+              <span className="rounded-full border border-border px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                Cerrado
+              </span>
             )}
           </div>
         </div>
       </div>
 
-      {/* Mensaje de error inline */}
-      {error && (
-        <p className="pl-8 mt-1 text-xs text-destructive">{error}</p>
-      )}
+      {error && <p className="pl-8 mt-1 text-xs text-destructive">{error}</p>}
     </li>
   )
 }
@@ -162,82 +240,71 @@ export function ParticipantRow({
 // ── Sub-componentes de UI ─────────────────────────────────────────────────────
 
 function StatusIcon({ status }: { status: ParticipantStatus }) {
-  if (status === "PAGO") {
-    return (
-      <CheckCircle2
-        className="size-5 shrink-0 text-green-500"
-        aria-label="Pagó"
-      />
-    )
-  }
-  if (status === "EXIMIDA") {
-    return (
-      <MinusCircle
-        className="size-5 shrink-0 text-muted-foreground"
-        aria-label="Eximida"
-      />
-    )
-  }
-  return (
-    <Clock
-      className="size-5 shrink-0 text-amber-500"
-      aria-label="Pendiente"
-    />
-  )
+  if (status === "PAGO") return <CheckCircle2 className="size-5 shrink-0 text-green-500" aria-label="Pagó" />
+  if (status === "EXIMIDA") return <MinusCircle className="size-5 shrink-0 text-muted-foreground" aria-label="Eximida" />
+  return <Clock className="size-5 shrink-0 text-amber-500" aria-label="Pendiente" />
 }
 
-const STATUS_BADGE: Record<
-  ParticipantStatus,
-  { label: string; className: string }
-> = {
-  PAGO: {
-    label: "Pagó",
-    className:
-      "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-  },
-  PENDIENTE: {
-    label: "Pendiente",
-    className:
-      "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-  },
-  EXIMIDA: {
-    label: "Eximida",
-    className: "bg-muted text-muted-foreground",
-  },
+const STATUS_BADGE: Record<ParticipantStatus, { label: string; className: string }> = {
+  PAGO:      { label: "Pagó",      className: "bg-green-100 text-green-700" },
+  PENDIENTE: { label: "Pendiente", className: "bg-amber-100 text-amber-700" },
+  EXIMIDA:   { label: "Eximida",   className: "bg-muted text-muted-foreground" },
 }
 
 function StatusBadge({ status }: { status: ParticipantStatus }) {
   const { label, className } = STATUS_BADGE[status]
-  return (
-    <span
-      className={cn(
-        "rounded-full px-2 py-0.5 text-xs font-medium",
-        className
-      )}
-    >
-      {label}
-    </span>
-  )
+  return <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", className)}>{label}</span>
 }
 
 function ActionButtons({
   status,
+  showAmountInput,
+  inputAmount,
+  onInputAmountChange,
+  onPayClick,
+  onShowAmountInput,
+  onCancelAmount,
   onChange,
 }: {
   status: ParticipantStatus
+  showAmountInput: boolean
+  inputAmount: string
+  onInputAmountChange: (v: string) => void
+  onPayClick: () => void
+  onShowAmountInput: () => void
+  onCancelAmount: () => void
   onChange: (status: ParticipantStatus) => void
 }) {
   if (status === "PENDIENTE") {
+    if (showAmountInput) {
+      return (
+        <div className="flex items-center gap-1">
+          <span className="text-xs text-muted-foreground">$</span>
+          <input
+            autoFocus
+            type="number"
+            min="1"
+            value={inputAmount}
+            placeholder="monto"
+            onChange={(e) => onInputAmountChange(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") onPayClick(); if (e.key === "Escape") onCancelAmount() }}
+            className="h-6 w-20 rounded border border-input bg-background px-1.5 text-xs outline-none focus-visible:border-ring"
+          />
+          <button onClick={onPayClick} className="rounded bg-green-600 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-green-700">OK</button>
+          <button onClick={onCancelAmount} className="text-muted-foreground"><X className="size-3" /></button>
+        </div>
+      )
+    }
+
     return (
       <div className="flex items-center gap-1">
         <button
           type="button"
-          onClick={() => onChange("PAGO")}
+          onClick={onShowAmountInput}
+          title="Marcar como pagado (con monto personalizable)"
           className={cn(
             "rounded-md border border-green-200 bg-green-50 px-2 py-0.5",
-            "text-xs font-medium text-green-700 transition-colors",
-            "hover:bg-green-100",
-            "dark:border-green-800 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/40"
+            "text-xs font-medium text-green-700 transition-colors hover:bg-green-100"
           )}
         >
           Pagó
@@ -253,7 +320,6 @@ function ActionButtons({
     )
   }
 
-  // PAGO o EXIMIDA: botón para volver a PENDIENTE
   return (
     <button
       type="button"

@@ -320,25 +320,22 @@ export async function getEventoForDuplication(
 
 /**
  * Cambia el estado de pago de un participante.
- *
- * • PAGO      → crea (o actualiza) el Payment con amountPerPlayer del evento.
- * • PENDIENTE → elimina el Payment si existe.
- * • EXIMIDA   → elimina el Payment si existe.
- *
- * Solo la capitana puede modificar estados de pago.
+ * RF-21: usa customAmount del participante si está definido.
+ * RF-24: rechaza cambios en eventos cerrados.
+ * RF-30: acepta paidAmount opcional para registrar pago parcial.
  */
 export async function updateParticipantStatus(
   participantId: string,
   teamId: string,
   newStatus: ParticipantStatus,
-  userId: string
+  userId: string,
+  paidAmount?: number
 ): Promise<ServiceResult<EventParticipant>> {
   try {
     if (!(await isCapitana(teamId, userId))) {
       return { success: false, error: "Solo la capitana puede registrar pagos." }
     }
 
-    // Obtener participante con evento y pago actual
     const participant = await prisma.eventParticipant.findUnique({
       where: { id: participantId },
       include: { event: true, payment: true },
@@ -348,27 +345,34 @@ export async function updateParticipantStatus(
       return { success: false, error: "Participante no encontrado." }
     }
 
+    // RF-24: evento cerrado
+    if (participant.event.closedAt) {
+      return { success: false, error: "El evento está cerrado y no acepta cambios de pago." }
+    }
+
     const updated = await prisma.$transaction(async (tx) => {
       if (newStatus === "PAGO") {
-        const amount = String(participant.event.amountPerPlayer)
+        // RF-21 + RF-30: usar monto personalizado, luego customAmount, luego amountPerPlayer
+        const effectiveAmount = paidAmount != null
+          ? String(paidAmount)
+          : String(participant.customAmount ?? participant.event.amountPerPlayer)
+
         if (participant.payment) {
-          // Actualizar pago existente (p.ej.: capitana deshace y vuelve a marcar)
           await tx.payment.update({
             where: { id: participant.payment.id },
-            data: { amount, paidAt: new Date(), confirmedById: userId },
+            data: { amount: effectiveAmount, paidAt: new Date(), confirmedById: userId },
           })
         } else {
           await tx.payment.create({
             data: {
               eventParticipantId: participantId,
-              amount,
+              amount: effectiveAmount,
               paidAt: new Date(),
               confirmedById: userId,
             },
           })
         }
       } else if (participant.payment) {
-        // PENDIENTE o EXIMIDA: eliminar el pago registrado
         await tx.payment.delete({ where: { id: participant.payment.id } })
       }
 
@@ -382,5 +386,71 @@ export async function updateParticipantStatus(
   } catch (error) {
     console.error("[eventoService.updateParticipantStatus]", error)
     return { success: false, error: "No se pudo actualizar el estado del pago." }
+  }
+}
+
+// ── updateParticipantCustomAmount (RF-21) ─────────────────────────────────────
+
+export async function updateParticipantCustomAmount(
+  participantId: string,
+  teamId: string,
+  customAmount: number | null,
+  userId: string
+): Promise<ServiceResult<EventParticipant>> {
+  try {
+    if (!(await isCapitana(teamId, userId))) {
+      return { success: false, error: "Solo la capitana puede modificar montos." }
+    }
+
+    const participant = await prisma.eventParticipant.findUnique({
+      where: { id: participantId },
+      include: { event: { select: { teamId: true, closedAt: true } } },
+    })
+
+    if (!participant || participant.event.teamId !== teamId) {
+      return { success: false, error: "Participante no encontrado." }
+    }
+
+    if (participant.event.closedAt) {
+      return { success: false, error: "El evento está cerrado." }
+    }
+
+    const updated = await prisma.eventParticipant.update({
+      where: { id: participantId },
+      data: { customAmount: customAmount != null ? String(customAmount) : null },
+    })
+
+    return { success: true, data: updated }
+  } catch (error) {
+    console.error("[eventoService.updateParticipantCustomAmount]", error)
+    return { success: false, error: "No se pudo actualizar el monto." }
+  }
+}
+
+// ── closeEvento (RF-24) ───────────────────────────────────────────────────────
+
+export async function closeEvento(
+  eventoId: string,
+  teamId: string,
+  userId: string
+): Promise<ServiceResult<Event>> {
+  try {
+    if (!(await isCapitana(teamId, userId))) {
+      return { success: false, error: "Solo la capitana puede cerrar eventos." }
+    }
+
+    const evento = await prisma.event.findFirst({ where: { id: eventoId, teamId } })
+    if (!evento) return { success: false, error: "Evento no encontrado." }
+    if (evento.closedAt) return { success: false, error: "El evento ya está cerrado." }
+
+    const updated = await prisma.event.update({
+      where: { id: eventoId },
+      data: { closedAt: new Date() },
+    })
+
+    return { success: true, data: updated }
+  } catch (error) {
+    console.error("[eventoService.closeEvento]", error)
+    return { success: false, error: "No se pudo cerrar el evento." }
   }
 }

@@ -94,6 +94,7 @@ export async function getTeamBalance(
             select: {
               eventId: true,
               status: true,
+              customAmount: true,   // RF-21
               payment: { select: { amount: true } },
             },
           })
@@ -140,7 +141,10 @@ export async function getTeamBalance(
         (acc, p) => acc + (p.payment ? Number(p.payment.amount) : 0),
         0
       )
-      const totalEsperado = obligadas * Number(ev.amountPerPlayer)
+      // RF-21: usar customAmount por participante si está definido
+      const totalEsperado = evParticipants
+        .filter((p) => p.status !== "EXIMIDA")
+        .reduce((acc, p) => acc + Number(p.customAmount ?? ev.amountPerPlayer), 0)
       const progreso =
         obligadas > 0 ? Math.round((pagaron / obligadas) * 100) : 100
 

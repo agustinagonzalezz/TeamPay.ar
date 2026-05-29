@@ -14,6 +14,7 @@ import { getEventoById, checkIsCapitana } from "@/services/eventoService"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { buttonVariants } from "@/components/ui/button"
 import { ParticipantRow } from "@/components/eventos/ParticipantRow"
+import { CerrarEventoButton } from "@/components/eventos/CerrarEventoButton"
 import { formatCurrency, formatDate, cn } from "@/lib/utils"
 import { EVENT_TYPE_LABELS } from "@/lib/validations/evento"
 
@@ -51,7 +52,12 @@ export default async function EventoPage({
     (acc, p) => acc + (p.payment ? Number(p.payment.amount) : 0),
     0
   )
-  const totalEsperado = obligadas * Number(evento.amountPerPlayer)
+  // RF-21: usar customAmount por participante cuando está definido
+  const totalEsperado = evento.participants
+    .filter((p) => p.status !== "EXIMIDA")
+    .reduce((acc, p) => acc + Number(p.customAmount ?? evento.amountPerPlayer), 0)
+
+  const isClosed = !!evento.closedAt
 
   return (
     <div className="flex flex-col gap-8">
@@ -68,17 +74,33 @@ export default async function EventoPage({
 
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1">
-            <h1 className="text-2xl font-bold tracking-tight">{evento.name}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold tracking-tight">{evento.name}</h1>
+              {isClosed && (
+                <span className="rounded-full border border-amber-300/60 bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">
+                  Cerrado
+                </span>
+              )}
+            </div>
             <div className="mt-1.5 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
               <span>{EVENT_TYPE_LABELS[evento.type]}</span>
               <span>·</span>
               <span>{formatCurrency(Number(evento.amountPerPlayer))} por jugadora</span>
               <span>·</span>
               <span>Vence {formatDate(evento.dueDate)}</span>
+              {isClosed && evento.closedAt && (
+                <>
+                  <span>·</span>
+                  <span>Cerrado el {formatDate(evento.closedAt)}</span>
+                </>
+              )}
             </div>
           </div>
           {isCapitana && (
-            <div className="flex shrink-0 gap-2">
+            <div className="flex shrink-0 flex-wrap gap-2">
+              {!isClosed && (
+                <CerrarEventoButton equipoId={equipoId} eventoId={eventoId} eventoName={evento.name} />
+              )}
               <Link
                 href={`/equipos/${equipoId}/eventos/${eventoId}/editar`}
                 className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
@@ -89,7 +111,6 @@ export default async function EventoPage({
               <Link
                 href={`/equipos/${equipoId}/eventos/nuevo?duplicar=${eventoId}`}
                 className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-                title="Crear un nuevo evento con los mismos datos"
               >
                 <Copy className="size-4" aria-hidden="true" />
                 Duplicar
@@ -134,9 +155,9 @@ export default async function EventoPage({
               {evento.participants.map((participant) => (
                 <ParticipantRow
                   key={participant.id}
-                  // Serializar Decimal → number antes de pasar al Client Component
                   participant={{
                     ...participant,
+                    customAmount: participant.customAmount != null ? Number(participant.customAmount) : null,
                     payment: participant.payment
                       ? { ...participant.payment, amount: Number(participant.payment.amount) }
                       : null,
@@ -145,6 +166,7 @@ export default async function EventoPage({
                   eventoId={eventoId}
                   isCapitana={isCapitana}
                   amountPerPlayer={Number(evento.amountPerPlayer)}
+                  isClosed={isClosed}
                 />
               ))}
             </ul>

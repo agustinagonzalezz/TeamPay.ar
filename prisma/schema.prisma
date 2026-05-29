@@ -195,6 +195,8 @@ model Event {
   /// Monto que debe pagar cada jugadora participante
   amountPerPlayer Decimal   @db.Decimal(12, 2)
   dueDate         DateTime
+  /// Fecha de cierre — null = abierto, fecha = cerrado (RF-24)
+  closedAt        DateTime?
 
   team         Team               @relation(fields: [teamId], references: [id], onDelete: Cascade)
   participants EventParticipant[]
@@ -214,6 +216,8 @@ model EventParticipant {
   eventId      String
   teamMemberId String
   status       ParticipantStatus @default(PENDIENTE)
+  /// Monto personalizado que sobreescribe event.amountPerPlayer (RF-21)
+  customAmount Decimal?          @db.Decimal(12, 2)
 
   event      Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
   teamMember TeamMember @relation(fields: [teamMemberId], references: [id], onDelete: Cascade)
