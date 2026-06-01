@@ -4,11 +4,12 @@ import { updateParticipantStatus, updateParticipantCustomAmount } from "@/servic
 
 type Params = { params: Promise<{ equipoId: string; eventoId: string; participanteId: string }> }
 
-// Dos modos: actualizar status (+ paidAmount opcional RF-30) o customAmount (RF-21)
+// Dos modos: actualizar status (+ paidAmount y medioPago opcionales) o customAmount (RF-21)
 const patchSchema = z.union([
   z.object({
     status: z.enum(["PAGO", "PENDIENTE", "EXIMIDA"]),
     paidAmount: z.number().positive().optional(), // RF-30
+    medioPago: z.enum(["EFECTIVO", "TRANSFERENCIA"]).optional(),
   }),
   z.object({
     customAmount: z.number().positive().nullable(), // RF-21
@@ -31,7 +32,7 @@ export async function PATCH(req: Request, { params }: Params) {
 
   if ("status" in data) {
     const result = await updateParticipantStatus(
-      participanteId, equipoId, data.status, user.id, data.paidAmount
+      participanteId, equipoId, data.status, user.id, data.paidAmount, data.medioPago
     )
     if (!result.success) return Response.json(result, { status: 400 })
     return Response.json({ success: true, data: result.data })

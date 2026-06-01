@@ -11,6 +11,13 @@ export const EVENT_TYPE_LABELS = {
   OTRO: "Otro",
 } as const
 
+export const conceptoSchema = z.object({
+  nombre: z.string().min(1).max(100).trim(),
+  monto: z.number().positive(),
+})
+
+export type ConceptoInput = z.infer<typeof conceptoSchema>
+
 export const createEventoSchema = z.object({
   name: z
     .string()
@@ -33,6 +40,9 @@ export const createEventoSchema = z.object({
     .string()
     .min(1, "La fecha es requerida")
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de fecha inválido"),
+
+  // Desglose opcional de conceptos (ej: Entrenador, Cancha)
+  conceptos: z.array(conceptoSchema).optional(),
 })
 
 export type CreateEventoInput = z.infer<typeof createEventoSchema>

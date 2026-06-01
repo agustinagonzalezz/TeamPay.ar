@@ -37,6 +37,9 @@ export type TeamBalanceData = {
   totalGastado: number
   /** totalCobrado − totalGastado */
   balance: number
+  /** Desglose de cobrado por medio de pago */
+  cobradoEfectivo: number
+  cobradoTransferencia: number
   eventos: BalanceEvento[]
   gastos: Expense[]
 }
@@ -95,7 +98,7 @@ export async function getTeamBalance(
               eventId: true,
               status: true,
               customAmount: true,   // RF-21
-              payment: { select: { amount: true } },
+              payment: { select: { amount: true, medioPago: true } },
             },
           })
         : []
@@ -114,6 +117,14 @@ export async function getTeamBalance(
 
     const totalCobrado = participants.reduce(
       (acc, p) => acc + (p.payment ? Number(p.payment.amount) : 0),
+      0
+    )
+    const cobradoEfectivo = participants.reduce(
+      (acc, p) => acc + (p.payment?.medioPago === "EFECTIVO" ? Number(p.payment.amount) : 0),
+      0
+    )
+    const cobradoTransferencia = participants.reduce(
+      (acc, p) => acc + (p.payment?.medioPago === "TRANSFERENCIA" ? Number(p.payment.amount) : 0),
       0
     )
     const totalGastado = gastos.reduce(
@@ -168,6 +179,8 @@ export async function getTeamBalance(
         totalCobrado,
         totalGastado,
         balance: totalCobrado - totalGastado,
+        cobradoEfectivo,
+        cobradoTransferencia,
         eventos: eventosResumen,
         gastos,
       },

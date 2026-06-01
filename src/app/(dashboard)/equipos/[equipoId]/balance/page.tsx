@@ -117,7 +117,7 @@ export default async function BalancePage({
   if (!balanceResult.success) notFound()
 
   const equipo = teamResult.data
-  const { totalCobrado, totalGastado, balance, eventos, gastos } =
+  const { totalCobrado, totalGastado, balance, cobradoEfectivo, cobradoTransferencia, eventos, gastos } =
     balanceResult.data
 
   const balancePositivo = balance >= 0
@@ -170,7 +170,22 @@ export default async function BalancePage({
           <p className="mt-1 text-xl font-bold tabular-nums text-foreground">
             {formatCurrency(totalCobrado)}
           </p>
-          <p className="text-[11px] text-muted-foreground">de pagos de jugadoras</p>
+          {(cobradoEfectivo > 0 || cobradoTransferencia > 0) ? (
+            <div className="flex flex-col gap-0.5">
+              {cobradoEfectivo > 0 && (
+                <p className="text-[11px] text-muted-foreground">
+                  Efectivo: <span className="font-medium text-foreground">{formatCurrency(cobradoEfectivo)}</span>
+                </p>
+              )}
+              {cobradoTransferencia > 0 && (
+                <p className="text-[11px] text-muted-foreground">
+                  Transferencia: <span className="font-medium text-foreground">{formatCurrency(cobradoTransferencia)}</span>
+                </p>
+              )}
+            </div>
+          ) : (
+            <p className="text-[11px] text-muted-foreground">de pagos de jugadoras</p>
+          )}
         </div>
 
         {/* Gastado */}

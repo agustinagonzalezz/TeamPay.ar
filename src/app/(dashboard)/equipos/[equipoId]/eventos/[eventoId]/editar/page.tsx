@@ -26,6 +26,12 @@ export default async function EditarEventoPage({
   const playerCount = jugadorasResult.success ? jugadorasResult.data.length : 0
   const dueDate = evento.dueDate.toISOString().split("T")[0]
 
+  const defaultItems = evento.conceptos.length > 0
+    ? [...evento.conceptos]
+        .sort((a, b) => a.orden - b.orden)
+        .map((c) => ({ nombre: c.nombre, monto: Number(c.monto) }))
+    : undefined
+
   return (
     <EditarEventoForm
       equipoId={equipoId}
@@ -37,6 +43,7 @@ export default async function EditarEventoPage({
         totalAmount: Number(evento.amountPerPlayer) * playerCount,
         dueDate,
       }}
+      defaultItems={defaultItems}
     />
   )
 }

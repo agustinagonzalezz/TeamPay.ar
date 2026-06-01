@@ -51,6 +51,7 @@ interface NuevoEventoFormProps {
   playerCount: number
   isDuplicate?: boolean
   defaultValues?: Partial<CreateEventoInput>
+  defaultItems?: { nombre: string; monto: number }[]
 }
 
 // ── Helper ────────────────────────────────────────────────────────────────────
@@ -61,13 +62,15 @@ function todayString() {
 
 // ── Componente ────────────────────────────────────────────────────────────────
 
-export function NuevoEventoForm({ equipoId, playerCount, isDuplicate = false, defaultValues }: NuevoEventoFormProps) {
+export function NuevoEventoForm({ equipoId, playerCount, isDuplicate = false, defaultValues, defaultItems }: NuevoEventoFormProps) {
   const router = useRouter()
   const [serverError, setServerError] = useState<string | null>(null)
 
   // ── Estado del desglose ───────────────────────────────────────────────────
-  const [items, setItems] = useState<CostItem[]>([])
-  const [showBreakdown, setShowBreakdown] = useState(false)
+  const [items, setItems] = useState<CostItem[]>(
+    defaultItems?.map((item, idx) => ({ id: String(idx), concepto: item.nombre, monto: item.monto })) ?? []
+  )
+  const [showBreakdown, setShowBreakdown] = useState(!!(defaultItems && defaultItems.length > 0))
   const [newConcepto, setNewConcepto] = useState("")
   const [newMonto, setNewMonto] = useState("")
   const [itemError, setItemError] = useState<string | null>(null)
@@ -138,10 +141,16 @@ export function NuevoEventoForm({ equipoId, playerCount, isDuplicate = false, de
   async function onSubmit(values: CreateEventoInput) {
     setServerError(null)
     try {
+      const payload = {
+        ...values,
+        conceptos: items.length > 0
+          ? items.map((item) => ({ nombre: item.concepto, monto: item.monto }))
+          : undefined,
+      }
       const res = await fetch(`/api/equipos/${equipoId}/eventos`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
+        body: JSON.stringify(payload),
       })
       const data = (await res.json()) as {
         success: boolean; error?: string

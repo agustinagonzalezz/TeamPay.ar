@@ -63,6 +63,12 @@ enum ParticipantStatus {
   EXIMIDA   // La capitana la eximió del pago
 }
 
+/// Medio por el que se realizó el pago.
+enum MedioPago {
+  EFECTIVO
+  TRANSFERENCIA
+}
+
 // ═════════════════════════════════════════════════════════════════════════════
 // AUTH.JS — Modelos requeridos por @auth/prisma-adapter v2
 // Referencia: https://authjs.dev/getting-started/adapters/prisma
@@ -202,11 +208,28 @@ model Event {
 
   team         Team               @relation(fields: [teamId], references: [id], onDelete: Cascade)
   participants EventParticipant[]
+  conceptos    EventConcepto[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([teamId])
+}
+
+// ── EventConcepto ─────────────────────────────────────────────────────────────
+
+/// Ítem de desglose de costos de un evento (ej: Entrenador $210.000, Cancha $70.000).
+/// La suma de los conceptos equivale al monto total del evento.
+model EventConcepto {
+  id      String  @id @default(cuid())
+  eventId String
+  nombre  String
+  monto   Decimal @db.Decimal(12, 2)
+  orden   Int     @default(0)
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
 }
 
 // ── EventParticipant ──────────────────────────────────────────────────────────
@@ -246,6 +269,8 @@ model Payment {
   /// URL del comprobante de pago (captura de transferencia, etc.)
   receiptUrl         String?
   confirmedById      String
+  /// Medio de pago (null en pagos registrados antes de esta funcionalidad)
+  medioPago          MedioPago?
 
   eventParticipant EventParticipant @relation(fields: [eventParticipantId], references: [id], onDelete: Cascade)
   confirmedBy      User             @relation("PaymentConfirmedBy", fields: [confirmedById], references: [id])

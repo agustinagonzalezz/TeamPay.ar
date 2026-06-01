@@ -10,9 +10,11 @@ import type { CreateEventoInput, UpdateEventoInput } from "@/lib/validations/eve
 import type {
   Event,
   EventParticipant,
+  EventConcepto,
   TeamMember,
   Payment,
   ParticipantStatus,
+  MedioPago,
 } from "@/generated/prisma/client"
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
@@ -32,6 +34,7 @@ export type ParticipantWithDetails = EventParticipant & {
 
 export type EventoDetails = Event & {
   participants: ParticipantWithDetails[]
+  conceptos: EventConcepto[]
 }
 
 // ── isCapitana ────────────────────────────────────────────────────────────────
@@ -99,6 +102,17 @@ export async function createEvento(
             eventId: ev.id,
             teamMemberId: j.id,
             status: "PENDIENTE",
+          })),
+        })
+      }
+
+      if (input.conceptos && input.conceptos.length > 0) {
+        await tx.eventConcepto.createMany({
+          data: input.conceptos.map((c, idx) => ({
+            eventId: ev.id,
+            nombre: c.nombre,
+            monto: String(c.monto),
+            orden: idx,
           })),
         })
       }
@@ -179,6 +193,7 @@ export async function getEventoById(
           // orderBy por campo de relación no soportado con PrismaPg adapter
           // → ordenamos en JavaScript después de obtener los datos
         },
+        conceptos: true,
       },
     })
 
@@ -221,14 +236,33 @@ export async function updateEvento(
         ? Math.round(input.totalAmount / playerCount)
         : undefined
 
-    const updated = await prisma.event.update({
-      where: { id: eventoId },
-      data: {
-        ...(input.name && { name: input.name.trim() }),
-        ...(input.type && { type: input.type }),
-        ...(amountPerPlayer != null && { amountPerPlayer }),
-        ...(input.dueDate && { dueDate: new Date(input.dueDate + "T12:00:00") }),
-      },
+    const updated = await prisma.$transaction(async (tx) => {
+      const ev = await tx.event.update({
+        where: { id: eventoId },
+        data: {
+          ...(input.name && { name: input.name.trim() }),
+          ...(input.type && { type: input.type }),
+          ...(amountPerPlayer != null && { amountPerPlayer }),
+          ...(input.dueDate && { dueDate: new Date(input.dueDate + "T12:00:00") }),
+        },
+      })
+
+      // undefined = no tocar; [] = borrar todos; [...] = reemplazar
+      if (input.conceptos !== undefined) {
+        await tx.eventConcepto.deleteMany({ where: { eventId: eventoId } })
+        if (input.conceptos.length > 0) {
+          await tx.eventConcepto.createMany({
+            data: input.conceptos.map((c, idx) => ({
+              eventId: eventoId,
+              nombre: c.nombre,
+              monto: String(c.monto),
+              orden: idx,
+            })),
+          })
+        }
+      }
+
+      return ev
     })
     return { success: true, data: updated }
   } catch (error) {
@@ -276,6 +310,7 @@ export type EventoSourceData = {
   type: string
   amountPerPlayer: number
   dueDate: Date
+  conceptos: { nombre: string; monto: number; orden: number }[]
 }
 
 export async function getEventoForDuplication(
@@ -294,7 +329,13 @@ export async function getEventoForDuplication(
 
     const evento = await prisma.event.findFirst({
       where: { id: eventoId, teamId },
-      select: { name: true, type: true, amountPerPlayer: true, dueDate: true },
+      select: {
+        name: true,
+        type: true,
+        amountPerPlayer: true,
+        dueDate: true,
+        conceptos: { select: { nombre: true, monto: true, orden: true }, orderBy: { orden: "asc" } },
+      },
     })
 
     if (!evento) {
@@ -308,6 +349,11 @@ export async function getEventoForDuplication(
         type: evento.type,
         amountPerPlayer: Number(evento.amountPerPlayer),
         dueDate: evento.dueDate,
+        conceptos: evento.conceptos.map((c) => ({
+          nombre: c.nombre,
+          monto: Number(c.monto),
+          orden: c.orden,
+        })),
       },
     }
   } catch (error) {
@@ -329,7 +375,8 @@ export async function updateParticipantStatus(
   teamId: string,
   newStatus: ParticipantStatus,
   userId: string,
-  paidAmount?: number
+  paidAmount?: number,
+  medioPago?: MedioPago
 ): Promise<ServiceResult<EventParticipant>> {
   try {
     if (!(await isCapitana(teamId, userId))) {
@@ -360,7 +407,12 @@ export async function updateParticipantStatus(
         if (participant.payment) {
           await tx.payment.update({
             where: { id: participant.payment.id },
-            data: { amount: effectiveAmount, paidAt: new Date(), confirmedById: userId },
+            data: {
+              amount: effectiveAmount,
+              paidAt: new Date(),
+              confirmedById: userId,
+              ...(medioPago !== undefined && { medioPago }),
+            },
           })
         } else {
           await tx.payment.create({
@@ -369,6 +421,7 @@ export async function updateParticipantStatus(
               amount: effectiveAmount,
               paidAt: new Date(),
               confirmedById: userId,
+              ...(medioPago !== undefined && { medioPago }),
             },
           })
         }

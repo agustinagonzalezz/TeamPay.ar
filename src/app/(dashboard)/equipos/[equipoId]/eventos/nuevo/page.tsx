@@ -49,6 +49,7 @@ export default async function NuevoEventoPage({
           playerCount={playerCount}
           isDuplicate
           defaultValues={defaultValues}
+          defaultItems={src.conceptos.length > 0 ? src.conceptos : undefined}
         />
       )
     }
