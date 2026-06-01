@@ -4,7 +4,7 @@ import { notFound, redirect } from "next/navigation"
 import { ArrowLeft, Plus, TrendingUp, Settings } from "lucide-react"
 import { getCurrentUser } from "@/lib/auth"
 import { getTeamDetails } from "@/services/teamService"
-import { getEventosByTeam } from "@/services/eventoService"
+import { getEventosByTeam, checkIsCapitana } from "@/services/eventoService"
 import { getGastosByTeam } from "@/services/gastoService"
 import { EventoCard } from "@/components/eventos/EventoCard"
 import { buttonVariants } from "@/components/ui/button"
@@ -50,16 +50,16 @@ export default async function EquipoPage({
   const user = await getCurrentUser()
   if (!user) redirect("/login")
 
-  const [teamResult, eventosResult, gastosResult] = await Promise.all([
+  const [teamResult, eventosResult, gastosResult, esCapitana] = await Promise.all([
     getTeamDetails(equipoId, user.id),
     getEventosByTeam(equipoId, user.id),
     getGastosByTeam(equipoId, user.id),
+    checkIsCapitana(equipoId, user.id),
   ])
 
   if (!teamResult.success) notFound()
 
   const equipo = teamResult.data
-  const esCapitana = equipo.ownerId === user.id
   const eventos = eventosResult.success ? eventosResult.data : []
   const gastos = gastosResult.success ? gastosResult.data : []
   const totalGastos = gastos.reduce((acc, g) => acc + Number(g.amount), 0)
@@ -165,27 +165,41 @@ export default async function EquipoPage({
           </span>
         </div>
 
-        <Link
-          href={`/equipos/${equipoId}/balance`}
-          className="group flex flex-col gap-0.5 px-4 py-4 transition-colors hover:bg-accent/40 sm:px-6"
-        >
-          <span className="flex items-center gap-1.5">
+        {esCapitana ? (
+          <Link
+            href={`/equipos/${equipoId}/balance`}
+            className="group flex flex-col gap-0.5 px-4 py-4 transition-colors hover:bg-accent/40 sm:px-6"
+          >
+            <span className="flex items-center gap-1.5">
+              <span
+                className="text-2xl font-bold tabular-nums sm:text-3xl"
+                style={{ color: "oklch(0.52 0.22 285)" }}
+              >
+                {totalGastos > 0 ? formatCurrency(totalGastos) : "—"}
+              </span>
+              <TrendingUp
+                className="size-4 opacity-0 transition-opacity group-hover:opacity-100"
+                style={{ color: "oklch(0.52 0.22 285)" }}
+                aria-hidden="true"
+              />
+            </span>
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+              Gastos · ver balance ↗
+            </span>
+          </Link>
+        ) : (
+          <div className="flex flex-col gap-0.5 px-4 py-4 sm:px-6">
             <span
               className="text-2xl font-bold tabular-nums sm:text-3xl"
               style={{ color: "oklch(0.52 0.22 285)" }}
             >
               {totalGastos > 0 ? formatCurrency(totalGastos) : "—"}
             </span>
-            <TrendingUp
-              className="size-4 opacity-0 transition-opacity group-hover:opacity-100"
-              style={{ color: "oklch(0.52 0.22 285)" }}
-              aria-hidden="true"
-            />
-          </span>
-          <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Gastos · ver balance ↗
-          </span>
-        </Link>
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+              Gastos
+            </span>
+          </div>
+        )}
 
       </div>
 

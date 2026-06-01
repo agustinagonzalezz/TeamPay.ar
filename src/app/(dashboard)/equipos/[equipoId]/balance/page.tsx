@@ -24,6 +24,7 @@ import {
 import { getCurrentUser } from "@/lib/auth"
 import { getTeamBalance } from "@/services/balanceService"
 import { getTeamById } from "@/services/teamService"
+import { checkIsCapitana } from "@/services/eventoService"
 import { getDeudorasParaWhatsApp } from "@/services/notificacionService"
 import { Card } from "@/components/ui/card"
 import { buttonVariants } from "@/components/ui/button"
@@ -106,6 +107,9 @@ export default async function BalancePage({
 
   const user = await getCurrentUser()
   if (!user) redirect("/login")
+
+  const isCapitana = await checkIsCapitana(equipoId, user.id)
+  if (!isCapitana) redirect(`/equipos/${equipoId}`)
 
   const [teamResult, balanceResult, deudorasResult] = await Promise.all([
     getTeamById(equipoId, user.id),
