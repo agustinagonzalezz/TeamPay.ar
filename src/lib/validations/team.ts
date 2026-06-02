@@ -24,6 +24,12 @@ export const createTeamSchema = z.object({
     .trim()
     .optional()
     .or(z.literal("")),
+
+  logoUrl: z
+    .string()
+    .url("URL inválida")
+    .optional()
+    .or(z.literal("")),
 })
 
 export type CreateTeamInput = z.infer<typeof createTeamSchema>

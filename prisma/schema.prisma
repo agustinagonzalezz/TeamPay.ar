@@ -152,6 +152,7 @@ model Team {
   id          String  @id @default(cuid())
   name        String
   description String?
+  logoUrl     String?
   ownerId     String
 
   owner    User         @relation("TeamOwner", fields: [ownerId], references: [id])

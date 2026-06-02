@@ -174,6 +174,7 @@ export async function updateTeam(
       data: {
         ...(input.name && { name: input.name.trim() }),
         description: input.description?.trim() || null,
+        ...(input.logoUrl !== undefined && { logoUrl: input.logoUrl || null }),
       },
     })
     return { success: true, data: updated }
