@@ -119,7 +119,7 @@ function Hero() {
           </span>
 
           <h1
-            className="text-[clamp(3rem,9vw,5.5rem)] font-black uppercase leading-[0.92] tracking-tighter"
+            className="text-[clamp(3rem,9vw,5.5rem)] font-black uppercase leading-[0.92] tracking-tight"
             style={{ fontFamily: "var(--font-barlow)" }}
           >
             Las cuentas{" "}
@@ -293,7 +293,7 @@ function Features() {
             Funcionalidades
           </span>
           <h2
-            className="mt-2 text-[clamp(2rem,5vw,3.2rem)] font-black uppercase leading-[0.95] tracking-tighter"
+            className="mt-2 text-[clamp(2rem,5vw,3.2rem)] font-black uppercase leading-[0.95] tracking-tight"
             style={{ fontFamily: "var(--font-barlow)", color: "#0f0d0c" }}
           >
             Todo lo que necesitás,{" "}
@@ -310,7 +310,7 @@ function Features() {
             >
               <span
                 className="shrink-0 text-5xl font-black tabular-nums leading-none"
-                style={{ fontFamily: "var(--font-barlow)", color: "#e0ddd8" }}
+                style={{ fontFamily: "var(--font-barlow)", color: "oklch(0.52 0.22 285 / 0.2)" }}
               >{f.number}</span>
               <div className="flex flex-col gap-2">
                 <h3 className="text-xl font-bold" style={{ color: "#0f0d0c" }}>{f.title}</h3>
@@ -335,7 +335,7 @@ function HowItWorks() {
           Cómo funciona
         </span>
         <h2
-          className="mt-2 text-[clamp(2rem,5vw,3.2rem)] font-black uppercase leading-[0.95] tracking-tighter"
+          className="mt-2 text-[clamp(2rem,5vw,3.2rem)] font-black uppercase leading-[0.95] tracking-tight"
           style={{ fontFamily: "var(--font-barlow)", color: "#0f0d0c" }}
         >
           Tres pasos.{" "}
