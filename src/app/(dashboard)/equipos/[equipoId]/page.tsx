@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
+import Image from "next/image"
 import { notFound, redirect } from "next/navigation"
 import { ArrowLeft, Plus, TrendingUp, Settings } from "lucide-react"
 import { getCurrentUser } from "@/lib/auth"
@@ -103,6 +104,19 @@ export default async function EquipoPage({
 
         {/* Contenido */}
         <div className="relative flex flex-col gap-3">
+          {/* Logo (RF-10) */}
+          {equipo.logoUrl && (
+            <div className="relative h-20 w-20 rounded-lg overflow-hidden border-2" style={{ borderColor: "oklch(0.99 0 0 / 0.2)" }}>
+              <Image
+                src={equipo.logoUrl}
+                alt={equipo.name}
+                fill
+                className="object-cover"
+                sizes="80px"
+              />
+            </div>
+          )}
+
           <div className="flex items-start justify-between gap-4">
             <h1
               className="text-5xl font-black leading-none tracking-tight sm:text-6xl lg:text-7xl"

@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import { ChevronRight, Users } from "lucide-react"
 import type { TeamWithMemberCount } from "@/services/teamService"
 
@@ -17,17 +18,28 @@ export function EquipoCard({ equipo }: EquipoCardProps) {
     >
       <div className="flex h-full flex-col justify-between rounded-xl border border-border bg-card p-5 transition-all duration-200 hover:border-primary/40 hover:bg-accent/30 focus-visible:border-primary/40">
 
-        {/* Icono + flecha */}
+        {/* Logo/Icono + flecha */}
         <div className="flex items-start justify-between gap-2">
-          <div
-            className="flex size-9 shrink-0 items-center justify-center rounded-lg text-sm font-bold"
-            style={{
-              background: "oklch(0.63 0.22 285 / 0.12)",
-              color: "oklch(0.63 0.22 285)",
-            }}
-            aria-hidden="true"
-          >
-            {initial}
+          <div className="relative size-9 shrink-0 rounded-lg overflow-hidden" aria-hidden="true">
+            {equipo.logoUrl ? (
+              <Image
+                src={equipo.logoUrl}
+                alt={equipo.name}
+                fill
+                className="object-cover"
+                sizes="36px"
+              />
+            ) : (
+              <div
+                className="flex size-full items-center justify-center text-sm font-bold"
+                style={{
+                  background: "oklch(0.63 0.22 285 / 0.12)",
+                  color: "oklch(0.63 0.22 285)",
+                }}
+              >
+                {initial}
+              </div>
+            )}
           </div>
           <ChevronRight
             className="mt-0.5 size-4 shrink-0 text-muted-foreground/25 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-primary"
