@@ -14,7 +14,7 @@
 
 import type { NextAuthConfig } from "next-auth";
 
-const PUBLIC_PATHS = ["/login"];
+const PUBLIC_PATHS = ["/login", "/"];
 
 export const authConfig = {
   pages: {
