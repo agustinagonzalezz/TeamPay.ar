@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { signIn } from "@/lib/auth";
 
 export const metadata: Metadata = {
-  title: "Iniciar sesión — TeamPay.ar",
+  title: "Iniciar sesión — TeamPayment.app",
   description: "Ingresá a tu equipo",
 };
 

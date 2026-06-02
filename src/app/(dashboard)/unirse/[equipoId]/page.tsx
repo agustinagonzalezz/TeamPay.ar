@@ -26,7 +26,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-export const metadata: Metadata = { title: "Unirse al equipo — TeamPay.ar" }
+export const metadata: Metadata = { title: "Unirse al equipo — TeamPayment.app" }
 
 // ── Página ────────────────────────────────────────────────────────────────────
 

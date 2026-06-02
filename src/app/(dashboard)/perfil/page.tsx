@@ -30,7 +30,7 @@ import { formatCurrency, formatDate, cn } from "@/lib/utils"
 import { EVENT_TYPE_LABELS } from "@/lib/validations/evento"
 import type { MiParticipacion } from "@/services/perfilService"
 
-export const metadata: Metadata = { title: "Mi perfil — TeamPay.ar" }
+export const metadata: Metadata = { title: "Mi perfil — TeamPayment.app" }
 
 // ── Página ────────────────────────────────────────────────────────────────────
 

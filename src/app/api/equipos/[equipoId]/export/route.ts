@@ -43,7 +43,7 @@ export async function GET(req: NextRequest, { params }: Params) {
 
   // ── Hoja 1: Resumen ──────────────────────────────────────────────────────────
   const resumenData = [
-    ["TeamPay.ar — Balance financiero"],
+    ["TeamPayment.app — Balance financiero"],
     ["Equipo", equipo.name],
     ["Fecha de exportación", new Date().toLocaleDateString("es-AR")],
     [],

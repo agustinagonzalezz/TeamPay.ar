@@ -18,7 +18,7 @@ import { CerrarEventoButton } from "@/components/eventos/CerrarEventoButton"
 import { formatCurrency, formatDate, cn } from "@/lib/utils"
 import { EVENT_TYPE_LABELS } from "@/lib/validations/evento"
 
-export const metadata: Metadata = { title: "Evento — TeamPay.ar" }
+export const metadata: Metadata = { title: "Evento — TeamPayment.app" }
 
 // ── Página ────────────────────────────────────────────────────────────────────
 

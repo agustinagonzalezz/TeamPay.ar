@@ -16,7 +16,7 @@ export async function generateMetadata({
 }: {
   params: Promise<{ equipoId: string }>
 }): Promise<Metadata> {
-  return { title: "Equipo — TeamPay.ar" }
+  return { title: "Equipo — TeamPayment.app" }
 }
 
 // ── Colores de avatar — paleta violeta / complementaria ───────────────────────

@@ -18,7 +18,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { buttonVariants } from "@/components/ui/button"
 import { formatCurrency, formatDateShort, cn } from "@/lib/utils"
 
-export const metadata: Metadata = { title: "Gastos — TeamPay.ar" }
+export const metadata: Metadata = { title: "Gastos — TeamPayment.app" }
 
 // ── Página ────────────────────────────────────────────────────────────────────
 

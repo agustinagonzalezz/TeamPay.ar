@@ -31,7 +31,7 @@ function buildMensaje(data: DeudorasData): string {
     `_Al ${fecha}_\n\n` +
     `${lineas}\n\n` +
     `*Total pendiente: ${formatCurrency(totalPendiente)}*\n\n` +
-    `_Gestionado con TeamPay.ar_`
+    `_Gestionado con TeamPayment.app_`
   )
 }
 

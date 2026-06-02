@@ -23,7 +23,7 @@ import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 export const metadata: Metadata = {
-  title: "Jugadoras — TeamPay.ar",
+  title: "Jugadoras — TeamPayment.app",
 }
 
 export default async function JugadorasPage({

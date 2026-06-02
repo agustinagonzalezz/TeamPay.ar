@@ -77,7 +77,7 @@ function getPeriodoFiltro(
   return {} // todos — sin filtro
 }
 
-export const metadata: Metadata = { title: "Balance — TeamPay.ar" }
+export const metadata: Metadata = { title: "Balance — TeamPayment.app" }
 
 // ── Colores por tipo de evento ────────────────────────────────────────────────
 
