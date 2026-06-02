@@ -30,6 +30,7 @@ import { Card } from "@/components/ui/card"
 import { buttonVariants } from "@/components/ui/button"
 import { WhatsAppMensaje } from "@/components/notificaciones/WhatsAppMensaje"
 import { PeriodoFilter } from "@/components/balance/PeriodoFilter"
+import { ExportarExcelButton } from "@/components/balance/ExportarExcelButton"
 import { formatCurrency, formatDateShort, cn } from "@/lib/utils"
 import { EVENT_TYPE_LABELS } from "@/lib/validations/evento"
 import type { EventType } from "@/generated/prisma/client"
@@ -145,11 +146,14 @@ export default async function BalancePage({
             <h1 className="text-2xl font-bold tracking-tight">Balance</h1>
             <p className="mt-1 text-sm text-muted-foreground">{equipo.name}</p>
           </div>
-          {periodo !== "todos" && (
-            <span className="shrink-0 rounded-full border border-primary/30 bg-primary/8 px-2.5 py-0.5 text-xs font-medium text-primary">
-              {PERIODO_LABELS[periodo]}
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            {periodo !== "todos" && (
+              <span className="shrink-0 rounded-full border border-primary/30 bg-primary/8 px-2.5 py-0.5 text-xs font-medium text-primary">
+                {PERIODO_LABELS[periodo]}
+              </span>
+            )}
+            <ExportarExcelButton equipoId={equipoId} desde={desde} hasta={hasta} />
+          </div>
         </div>
 
         {/* Filtro de período */}
