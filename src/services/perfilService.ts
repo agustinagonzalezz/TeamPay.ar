@@ -157,3 +157,38 @@ export async function getMySituacion(
     return { success: false, error: "No se pudo cargar tu situación." }
   }
 }
+
+// ── deleteAccount (RF-05) ─────────────────────────────────────────────────────
+
+/**
+ * Elimina la cuenta del usuario y todos sus datos asociados.
+ *
+ * Orden de eliminación (respeta foreign keys):
+ * 1. Desvincula confirmedById en pagos de equipos ajenos (SetNull)
+ * 2. Elimina todos los equipos del usuario (cascada: eventos, pagos, gastos)
+ * 3. Elimina el usuario (cascada: accounts, sessions; TeamMember.userId → null)
+ */
+export async function deleteAccount(
+  userId: string
+): Promise<{ success: true } | { success: false; error: string }> {
+  try {
+    await prisma.$transaction(async (tx) => {
+      // Los pagos confirmados por este usuario en equipos ajenos quedan
+      // con confirmedById = null (el schema ahora tiene onDelete: SetNull)
+      // No hace falta hacer nada extra — lo maneja Prisma automáticamente.
+
+      // Eliminar todos los equipos que administra
+      // (cascada: TeamMember, Event → EventParticipant → Payment, Expense)
+      await tx.team.deleteMany({ where: { ownerId: userId } })
+
+      // Eliminar el usuario
+      // (cascada: Account, Session; TeamMember.userId → null vía SetNull)
+      await tx.user.delete({ where: { id: userId } })
+    })
+
+    return { success: true }
+  } catch (error) {
+    console.error("[perfilService.deleteAccount]", error)
+    return { success: false, error: "No se pudo eliminar la cuenta." }
+  }
+}

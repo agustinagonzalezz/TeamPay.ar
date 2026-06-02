@@ -268,12 +268,13 @@ model Payment {
   paidAt             DateTime
   /// URL del comprobante de pago (captura de transferencia, etc.)
   receiptUrl         String?
-  confirmedById      String
+  /// Null cuando quien confirmó el pago eliminó su cuenta (RF-05)
+  confirmedById      String?
   /// Medio de pago (null en pagos registrados antes de esta funcionalidad)
   medioPago          MedioPago?
 
   eventParticipant EventParticipant @relation(fields: [eventParticipantId], references: [id], onDelete: Cascade)
-  confirmedBy      User             @relation("PaymentConfirmedBy", fields: [confirmedById], references: [id])
+  confirmedBy      User?            @relation("PaymentConfirmedBy", fields: [confirmedById], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

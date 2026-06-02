@@ -23,6 +23,7 @@ import { getCurrentUser } from "@/lib/auth"
 import { getMySituacion } from "@/services/perfilService"
 import { SignOutButton } from "@/components/shared/SignOutButton"
 import { EditNombreButton } from "@/components/shared/EditNombreButton"
+import { DeleteAccountButton } from "@/components/shared/DeleteAccountButton"
 import { Card, CardContent } from "@/components/ui/card"
 import { buttonVariants } from "@/components/ui/button"
 import { formatCurrency, formatDate, cn } from "@/lib/utils"
@@ -192,6 +193,17 @@ export default async function PerfilPage() {
           </Link>
         </div>
       )}
+
+      {/* ── Zona de peligro ────────────────────────────────────────────────── */}
+      <div className="max-w-2xl rounded-xl border border-destructive/30 p-6">
+        <h2 className="text-sm font-semibold text-destructive">Zona peligrosa</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Eliminar tu cuenta es una acción irreversible. Se borrarán todos tus equipos, eventos, pagos y gastos.
+        </p>
+        <div className="mt-4">
+          <DeleteAccountButton />
+        </div>
+      </div>
 
     </div>
   )
