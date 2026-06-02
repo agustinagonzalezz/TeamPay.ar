@@ -14,7 +14,10 @@
 
 import type { NextAuthConfig } from "next-auth";
 
-const PUBLIC_PATHS = ["/login", "/"];
+// Rutas públicas por prefijo (startsWith)
+const PUBLIC_PREFIXES = ["/login"];
+// Rutas públicas por coincidencia exacta
+const PUBLIC_EXACT = ["/"];
 
 export const authConfig = {
   pages: {
@@ -22,23 +25,18 @@ export const authConfig = {
     error: "/login",
   },
 
-  // Sin providers aquí: se agregan en auth.ts con el adapter de Prisma
   providers: [],
 
   callbacks: {
-    /**
-     * Se ejecuta en el proxy (Edge) para cada request.
-     * auth?.user viene del JWT decodificado — sin consulta a la DB.
-     * Retorna true (permitir), false (denegar) o Response (redirigir).
-     */
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const { pathname } = nextUrl;
 
-      const isPublicPath = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
+      const isLoginPath = PUBLIC_PREFIXES.some((p) => pathname.startsWith(p));
+      const isPublicPath = isLoginPath || PUBLIC_EXACT.includes(pathname);
 
       // Usuario autenticado en /login → redirigir al dashboard
-      if (isLoggedIn && isPublicPath) {
+      if (isLoggedIn && isLoginPath) {
         return Response.redirect(new URL("/", nextUrl));
       }
 
