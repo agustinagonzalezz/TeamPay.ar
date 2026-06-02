@@ -162,7 +162,7 @@ export default async function EquipoPage({
       <div className="grid grid-cols-3 divide-x divide-border rounded-xl border border-border">
 
         <div className="flex flex-col gap-0.5 px-4 py-4 sm:px-6">
-          <span className="text-2xl font-bold tabular-nums sm:text-3xl">
+          <span className="text-lg font-bold tabular-nums sm:text-2xl lg:text-3xl">
             {equipo._count.members}
           </span>
           <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
@@ -171,7 +171,7 @@ export default async function EquipoPage({
         </div>
 
         <div className="flex flex-col gap-0.5 px-4 py-4 sm:px-6">
-          <span className="text-2xl font-bold tabular-nums sm:text-3xl">
+          <span className="text-lg font-bold tabular-nums sm:text-2xl lg:text-3xl">
             {equipo._count.events}
           </span>
           <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
@@ -186,7 +186,7 @@ export default async function EquipoPage({
           >
             <span className="flex items-center gap-1.5">
               <span
-                className="text-2xl font-bold tabular-nums sm:text-3xl"
+                className="text-lg font-bold tabular-nums sm:text-2xl lg:text-3xl"
                 style={{ color: "oklch(0.52 0.22 285)" }}
               >
                 {totalGastos > 0 ? formatCurrency(totalGastos) : "—"}
@@ -204,7 +204,7 @@ export default async function EquipoPage({
         ) : (
           <div className="flex flex-col gap-0.5 px-4 py-4 sm:px-6">
             <span
-              className="text-2xl font-bold tabular-nums sm:text-3xl"
+              className="text-lg font-bold tabular-nums sm:text-2xl lg:text-3xl"
               style={{ color: "oklch(0.52 0.22 285)" }}
             >
               {totalGastos > 0 ? formatCurrency(totalGastos) : "—"}
