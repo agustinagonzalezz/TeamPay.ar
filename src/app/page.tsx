@@ -27,7 +27,7 @@ const FEATURES = [
     number: "03",
     title: "Avisá por WhatsApp",
     description: "Mensaje pre-armado con todos los nombres y montos. Listo para copiar y pegar, con un toque.",
-    detail: "Lista de deudoras · monto pendiente · envío directo a WhatsApp",
+    detail: "Lista de deudores/as · monto pendiente · envío directo a WhatsApp",
   },
 ]
 
@@ -40,7 +40,7 @@ const STEPS = [
   {
     number: "02",
     title: "Creás el equipo",
-    description: "Le ponés nombre y agregás las jugadoras.",
+    description: "Le ponés nombre y agregás los jugadores.",
   },
   {
     number: "03",
@@ -115,7 +115,7 @@ function Hero() {
               border: "1px solid oklch(0.52 0.22 285 / 0.2)",
             }}
           >
-            ⚽ Fútbol amateur argentino
+            ⚽ Para equipos de fútbol amateur
           </span>
 
           <h1
@@ -131,7 +131,8 @@ function Hero() {
 
           <p className="max-w-sm text-[15px] leading-relaxed" style={{ color: "#5a5450" }}>
             Cuotas, gastos y balance de tu equipo de fútbol
-            en un solo lugar. Sin planillas, sin quilombos.
+            en un solo lugar. Para capitanes y capitanas.
+            Sin planillas, sin quilombos.
           </p>
 
           <div className="flex flex-wrap items-center gap-4">
@@ -198,8 +199,8 @@ function MockDashboard() {
             style={{ background: "oklch(0.52 0.22 285)", color: "#fff" }}
           >LP</div>
           <div>
-            <p className="text-[13px] font-semibold" style={{ color: "#0f0d0c" }}>Las Pibas FC</p>
-            <p className="text-[10px]" style={{ color: "oklch(0.68 0.18 285)" }}>Capitana ★</p>
+            <p className="text-[13px] font-semibold" style={{ color: "#0f0d0c" }}>Club Rivadavia</p>
+            <p className="text-[10px]" style={{ color: "oklch(0.68 0.18 285)" }}>Capitán/a ★</p>
           </div>
         </div>
         <span
@@ -251,7 +252,7 @@ function MockDashboard() {
       <div className="px-4 pt-3 pb-3">
         <p className="text-[10px] uppercase tracking-wider mb-2" style={{ color: "#9a9490" }}>Gastos recientes</p>
         {[
-          { concept: "Profe Carla", amount: "−$35.000" },
+          { concept: "Profe Martín", amount: "−$35.000" },
           { concept: "Cancha Vélez", amount: "−$12.000" },
         ].map(({ concept, amount }, i) => (
           <div
@@ -273,7 +274,7 @@ function MockDashboard() {
         <span className="text-sm shrink-0">💬</span>
         <div className="min-w-0">
           <p className="text-[11px] font-medium" style={{ color: "oklch(0.38 0.12 145)" }}>
-            4 deudoras · $24.000 pendiente
+            4 deudores · $24.000 pendiente
           </p>
           <p className="text-[10px]" style={{ color: "oklch(0.55 0.1 145)" }}>Mensaje listo para WhatsApp</p>
         </div>
@@ -389,7 +390,7 @@ function FinalCTA() {
             className="text-[clamp(2.5rem,8vw,4rem)] font-black uppercase leading-none tracking-tighter mb-4"
             style={{ fontFamily: "var(--font-barlow)", color: "#fff" }}
           >
-            ¿Lista para arrancar?
+            ¿Listo/a para arrancar?
           </h2>
           <p className="text-[15px] mb-8" style={{ color: "#ffffffcc" }}>
             Sin tarjeta de crédito. Sin límites de jugadoras.
