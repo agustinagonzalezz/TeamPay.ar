@@ -56,7 +56,7 @@ export default async function LandingPage() {
   if (user) redirect("/equipos")
 
   return (
-    <div className="min-h-screen overflow-x-hidden" style={{ background: "#09090f", color: "#f0ede8" }}>
+    <div className="min-h-screen overflow-x-hidden" style={{ background: "#fafafa", color: "#0f0d0c" }}>
       <Nav />
       <Hero />
       <Features />
@@ -73,7 +73,7 @@ function Nav() {
   return (
     <nav
       className="sticky top-0 z-50 border-b"
-      style={{ borderColor: "#ffffff0f", background: "#09090fee", backdropFilter: "blur(16px)" }}
+      style={{ borderColor: "#e5e3e0", background: "#fafafaee", backdropFilter: "blur(16px)" }}
     >
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5">
         <div className="flex items-center gap-2.5">
@@ -89,7 +89,7 @@ function Nav() {
         <Link
           href="/login"
           className="rounded-lg px-3.5 py-1.5 text-xs font-medium transition-opacity hover:opacity-70"
-          style={{ border: "1px solid #ffffff18", color: "#a09a94" }}
+          style={{ border: "1px solid #d0cdc8", color: "#6b6560" }}
         >
           Iniciar sesión
         </Link>
@@ -129,7 +129,7 @@ function Hero() {
             <span style={{ color: "oklch(0.68 0.2 285)" }}>unido.</span>
           </h1>
 
-          <p className="max-w-sm text-[15px] leading-relaxed" style={{ color: "#7a7470" }}>
+          <p className="max-w-sm text-[15px] leading-relaxed" style={{ color: "#5a5450" }}>
             Cuotas, gastos y balance de tu equipo de fútbol
             en un solo lugar. Sin planillas, sin quilombos.
           </p>
@@ -143,12 +143,12 @@ function Hero() {
               Empezá gratis
               <span aria-hidden="true" className="opacity-70">→</span>
             </Link>
-            <span className="text-xs" style={{ color: "#3d3835" }}>
+            <span className="text-xs" style={{ color: "#9a9490" }}>
               Sin tarjeta · Sin límites
             </span>
           </div>
 
-          <div className="flex gap-8 pt-4 border-t" style={{ borderColor: "#ffffff08" }}>
+          <div className="flex gap-8 pt-4 border-t" style={{ borderColor: "#e5e3e0" }}>
             {[
               { value: "100%", label: "Gratis para arrancar" },
               { value: "5 min", label: "Setup del equipo" },
@@ -159,7 +159,7 @@ function Hero() {
                   className="text-2xl font-black tabular-nums leading-none"
                   style={{ fontFamily: "var(--font-barlow)", color: "oklch(0.68 0.2 285)" }}
                 >{value}</span>
-                <span className="text-[11px] leading-tight" style={{ color: "#3d3835" }}>{label}</span>
+                <span className="text-[11px] leading-tight" style={{ color: "#9a9490" }}>{label}</span>
               </div>
             ))}
           </div>
@@ -181,16 +181,16 @@ function MockDashboard() {
     <div
       className="rounded-2xl overflow-hidden text-sm select-none"
       style={{
-        background: "#111119",
-        border: "1px solid #ffffff10",
-        boxShadow: "0 0 60px oklch(0.52 0.22 285 / 0.08), 0 24px 64px #00000060",
+        background: "#ffffff",
+        border: "1px solid #e5e3e0",
+        boxShadow: "0 0 40px oklch(0.52 0.22 285 / 0.07), 0 16px 48px #0000000f",
       }}
       aria-hidden="true"
     >
       {/* Header */}
       <div
         className="flex items-center justify-between px-4 py-3 border-b"
-        style={{ borderColor: "#ffffff0a", background: "oklch(0.52 0.22 285 / 0.06)" }}
+        style={{ borderColor: "#f0eee8", background: "oklch(0.52 0.22 285 / 0.04)" }}
       >
         <div className="flex items-center gap-2.5">
           <div
@@ -198,7 +198,7 @@ function MockDashboard() {
             style={{ background: "oklch(0.52 0.22 285)", color: "#fff" }}
           >LP</div>
           <div>
-            <p className="text-[13px] font-semibold" style={{ color: "#f0ede8" }}>Las Pibas FC</p>
+            <p className="text-[13px] font-semibold" style={{ color: "#0f0d0c" }}>Las Pibas FC</p>
             <p className="text-[10px]" style={{ color: "oklch(0.68 0.18 285)" }}>Capitana ★</p>
           </div>
         </div>
@@ -209,7 +209,7 @@ function MockDashboard() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 border-b" style={{ borderColor: "#ffffff0a" }}>
+      <div className="grid grid-cols-3 border-b" style={{ borderColor: "#f0eee8" }}>
         {[
           { n: "14", label: "Jugadoras" },
           { n: "5", label: "Eventos" },
@@ -218,38 +218,38 @@ function MockDashboard() {
           <div
             key={label}
             className="flex flex-col gap-0.5 px-3 py-3"
-            style={{ borderRight: i < 2 ? "1px solid #ffffff0a" : undefined }}
+            style={{ borderRight: i < 2 ? "1px solid #f0eee8" : undefined }}
           >
             <span
               className="text-lg font-bold tabular-nums leading-none"
-              style={{ fontFamily: "var(--font-barlow)", color: n.startsWith("$") ? "oklch(0.68 0.2 285)" : "#f0ede8" }}
+              style={{ fontFamily: "var(--font-barlow)", color: n.startsWith("$") ? "oklch(0.52 0.22 285)" : "#0f0d0c" }}
             >{n}</span>
-            <span className="text-[10px] uppercase tracking-wider" style={{ color: "#3d3835" }}>{label}</span>
+            <span className="text-[10px] uppercase tracking-wider" style={{ color: "#9a9490" }}>{label}</span>
           </div>
         ))}
       </div>
 
       {/* Evento */}
-      <div className="px-4 py-3 border-b" style={{ borderColor: "#ffffff0a" }}>
+      <div className="px-4 py-3 border-b" style={{ borderColor: "#f0eee8" }}>
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[13px] font-medium" style={{ color: "#f0ede8" }}>Cuota Junio</span>
+          <span className="text-[13px] font-medium" style={{ color: "#0f0d0c" }}>Cuota Junio</span>
           <span
             className="rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide"
-            style={{ background: "oklch(0.52 0.22 285 / 0.12)", color: "oklch(0.68 0.18 285)" }}
+            style={{ background: "oklch(0.52 0.22 285 / 0.10)", color: "oklch(0.52 0.22 285)" }}
           >CUOTA</span>
         </div>
-        <div className="h-1.5 w-full rounded-full overflow-hidden mb-1.5" style={{ background: "#ffffff0a" }}>
+        <div className="h-1.5 w-full rounded-full overflow-hidden mb-1.5" style={{ background: "#f0eee8" }}>
           <div className="h-full rounded-full" style={{ width: "67%", background: "oklch(0.52 0.22 285)" }} />
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-[11px]" style={{ color: "#3d3835" }}>8/12 pagaron</span>
-          <span className="text-[11px] font-semibold" style={{ color: "#f0ede8" }}>67%</span>
+          <span className="text-[11px]" style={{ color: "#9a9490" }}>8/12 pagaron</span>
+          <span className="text-[11px] font-semibold" style={{ color: "#0f0d0c" }}>67%</span>
         </div>
       </div>
 
       {/* Gastos */}
       <div className="px-4 pt-3 pb-3">
-        <p className="text-[10px] uppercase tracking-wider mb-2" style={{ color: "#3d3835" }}>Gastos recientes</p>
+        <p className="text-[10px] uppercase tracking-wider mb-2" style={{ color: "#9a9490" }}>Gastos recientes</p>
         {[
           { concept: "Profe Carla", amount: "−$35.000" },
           { concept: "Cancha Vélez", amount: "−$12.000" },
@@ -257,10 +257,10 @@ function MockDashboard() {
           <div
             key={concept}
             className="flex items-center justify-between py-1.5"
-            style={{ borderTop: i > 0 ? "1px solid #ffffff06" : undefined }}
+            style={{ borderTop: i > 0 ? "1px solid #f5f3ef" : undefined }}
           >
-            <span className="text-[12px]" style={{ color: "#7a7470" }}>{concept}</span>
-            <span className="text-[12px] font-medium tabular-nums" style={{ color: "#f05470" }}>{amount}</span>
+            <span className="text-[12px]" style={{ color: "#6b6560" }}>{concept}</span>
+            <span className="text-[12px] font-medium tabular-nums" style={{ color: "#e03050" }}>{amount}</span>
           </div>
         ))}
       </div>
@@ -268,14 +268,14 @@ function MockDashboard() {
       {/* WhatsApp */}
       <div
         className="mx-4 mb-4 flex items-center gap-2.5 rounded-xl px-3 py-2.5"
-        style={{ background: "oklch(0.32 0.1 145 / 0.4)", border: "1px solid oklch(0.45 0.15 145 / 0.25)" }}
+        style={{ background: "oklch(0.96 0.04 145)", border: "1px solid oklch(0.85 0.08 145)" }}
       >
         <span className="text-sm shrink-0">💬</span>
         <div className="min-w-0">
-          <p className="text-[11px] font-medium" style={{ color: "oklch(0.75 0.15 145)" }}>
+          <p className="text-[11px] font-medium" style={{ color: "oklch(0.38 0.12 145)" }}>
             4 deudoras · $24.000 pendiente
           </p>
-          <p className="text-[10px]" style={{ color: "oklch(0.52 0.12 145)" }}>Mensaje listo para WhatsApp</p>
+          <p className="text-[10px]" style={{ color: "oklch(0.55 0.1 145)" }}>Mensaje listo para WhatsApp</p>
         </div>
       </div>
     </div>
@@ -286,36 +286,36 @@ function MockDashboard() {
 
 function Features() {
   return (
-    <section style={{ background: "#0d0d14", borderTop: "1px solid #ffffff08", borderBottom: "1px solid #ffffff08" }}>
+    <section style={{ background: "#f5f3ef", borderTop: "1px solid #e8e5e0", borderBottom: "1px solid #e8e5e0" }}>
       <div className="mx-auto max-w-6xl px-5 py-20">
         <div className="mb-14">
-          <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "oklch(0.62 0.18 285)" }}>
+          <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "oklch(0.52 0.22 285)" }}>
             Funcionalidades
           </span>
           <h2
             className="mt-2 text-[clamp(2rem,5vw,3.2rem)] font-black uppercase leading-[0.95] tracking-tighter"
-            style={{ fontFamily: "var(--font-barlow)", color: "#f0ede8" }}
+            style={{ fontFamily: "var(--font-barlow)", color: "#0f0d0c" }}
           >
             Todo lo que necesitás,{" "}
-            <span style={{ color: "oklch(0.68 0.2 285)" }}>nada que no usás.</span>
+            <span style={{ color: "oklch(0.52 0.22 285)" }}>nada que no usás.</span>
           </h2>
         </div>
 
-        <div className="flex flex-col border-t" style={{ borderColor: "#ffffff0a" }}>
+        <div className="flex flex-col border-t" style={{ borderColor: "#e8e5e0" }}>
           {FEATURES.map((f) => (
             <div
               key={f.number}
               className="flex flex-col gap-4 py-8 border-b sm:flex-row sm:items-start sm:gap-10"
-              style={{ borderColor: "#ffffff0a" }}
+              style={{ borderColor: "#e8e5e0" }}
             >
               <span
                 className="shrink-0 text-5xl font-black tabular-nums leading-none"
-                style={{ fontFamily: "var(--font-barlow)", color: "#ffffff0c" }}
+                style={{ fontFamily: "var(--font-barlow)", color: "#e0ddd8" }}
               >{f.number}</span>
               <div className="flex flex-col gap-2">
-                <h3 className="text-xl font-bold" style={{ color: "#f0ede8" }}>{f.title}</h3>
-                <p className="text-[14px] leading-relaxed max-w-lg" style={{ color: "#7a7470" }}>{f.description}</p>
-                <p className="text-[11px] font-medium" style={{ color: "oklch(0.62 0.18 285)" }}>{f.detail}</p>
+                <h3 className="text-xl font-bold" style={{ color: "#0f0d0c" }}>{f.title}</h3>
+                <p className="text-[14px] leading-relaxed max-w-lg" style={{ color: "#6b6560" }}>{f.description}</p>
+                <p className="text-[11px] font-medium" style={{ color: "oklch(0.52 0.22 285)" }}>{f.detail}</p>
               </div>
             </div>
           ))}
@@ -331,34 +331,34 @@ function HowItWorks() {
   return (
     <section className="mx-auto max-w-6xl px-5 py-20">
       <div className="mb-14">
-        <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "oklch(0.62 0.18 285)" }}>
+        <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "oklch(0.52 0.22 285)" }}>
           Cómo funciona
         </span>
         <h2
           className="mt-2 text-[clamp(2rem,5vw,3.2rem)] font-black uppercase leading-[0.95] tracking-tighter"
-          style={{ fontFamily: "var(--font-barlow)", color: "#f0ede8" }}
+          style={{ fontFamily: "var(--font-barlow)", color: "#0f0d0c" }}
         >
           Tres pasos.{" "}
-          <span style={{ color: "oklch(0.68 0.2 285)" }}>Eso es todo.</span>
+          <span style={{ color: "oklch(0.52 0.22 285)" }}>Eso es todo.</span>
         </h2>
       </div>
 
-      <div className="grid sm:grid-cols-3" style={{ border: "1px solid #ffffff0a" }}>
+      <div className="grid sm:grid-cols-3" style={{ border: "1px solid #e8e5e0" }}>
         {STEPS.map((s, i) => (
           <div
             key={s.number}
             className="flex flex-col gap-3 p-7"
             style={{
-              borderRight: i < STEPS.length - 1 ? "1px solid #ffffff0a" : undefined,
-              borderBottom: "1px solid #ffffff0a",
+              borderRight: i < STEPS.length - 1 ? "1px solid #e8e5e0" : undefined,
+              borderBottom: "1px solid #e8e5e0",
             }}
           >
             <span
               className="text-6xl font-black tabular-nums leading-none"
-              style={{ fontFamily: "var(--font-barlow)", color: "oklch(0.52 0.22 285 / 0.15)" }}
+              style={{ fontFamily: "var(--font-barlow)", color: "oklch(0.52 0.22 285 / 0.12)" }}
             >{s.number}</span>
-            <h3 className="text-[17px] font-bold" style={{ color: "#f0ede8" }}>{s.title}</h3>
-            <p className="text-[13px] leading-relaxed" style={{ color: "#5a5450" }}>{s.description}</p>
+            <h3 className="text-[17px] font-bold" style={{ color: "#0f0d0c" }}>{s.title}</h3>
+            <p className="text-[13px] leading-relaxed" style={{ color: "#6b6560" }}>{s.description}</p>
           </div>
         ))}
       </div>
@@ -412,19 +412,19 @@ function FinalCTA() {
 
 function Footer() {
   return (
-    <footer className="border-t" style={{ borderColor: "#ffffff08" }}>
+    <footer className="border-t" style={{ borderColor: "#e8e5e0" }}>
       <div className="mx-auto max-w-6xl px-5 py-8 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div
             className="flex size-5 items-center justify-center rounded text-[9px] font-bold"
-            style={{ background: "oklch(0.52 0.22 285 / 0.15)", color: "oklch(0.62 0.18 285)" }}
+            style={{ background: "oklch(0.52 0.22 285 / 0.12)", color: "oklch(0.52 0.22 285)" }}
             aria-hidden="true"
           >TP</div>
-          <span className="text-xs" style={{ color: "#2a2520" }}>
+          <span className="text-xs" style={{ color: "#b0ada8" }}>
             TeamPayment.app © 2026
           </span>
         </div>
-        <Link href="/login" className="text-xs transition-opacity hover:opacity-60" style={{ color: "#2a2520" }}>
+        <Link href="/login" className="text-xs transition-opacity hover:opacity-60" style={{ color: "#b0ada8" }}>
           Iniciar sesión
         </Link>
       </div>
