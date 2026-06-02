@@ -30,7 +30,6 @@ const barlowCondensed = Barlow_Condensed({
 export const metadata: Metadata = {
   title: "TeamPayment.app",
   description: "Gestioná los pagos de tu equipo de fútbol",
-  icons: { icon: "/favicon.svg" },
 };
 
 export default function RootLayout({
