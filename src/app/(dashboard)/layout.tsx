@@ -37,7 +37,7 @@ export default async function DashboardLayout({
               TP
             </div>
             <span className="text-sm font-semibold tracking-tight text-foreground">
-              TeamPay<span className="text-primary">.ar</span>
+              TeamPayment<span className="text-primary">.app</span>
             </span>
           </Link>
 
