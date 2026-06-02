@@ -23,6 +23,7 @@ export default async function EditarEquipoPage({
       equipoId={equipoId}
       nombre={equipo.name}
       descripcion={equipo.description ?? ""}
+      logoUrl={equipo.logoUrl ?? null}
     />
   )
 }

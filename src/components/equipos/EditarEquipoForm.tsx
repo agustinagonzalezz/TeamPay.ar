@@ -12,14 +12,16 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { LogoUploader } from "./LogoUploader"
 
 interface EditarEquipoFormProps {
   equipoId: string
   nombre: string
   descripcion: string
+  logoUrl: string | null
 }
 
-export function EditarEquipoForm({ equipoId, nombre, descripcion }: EditarEquipoFormProps) {
+export function EditarEquipoForm({ equipoId, nombre, descripcion, logoUrl }: EditarEquipoFormProps) {
   const router = useRouter()
   const [serverError, setServerError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
@@ -88,6 +90,13 @@ export function EditarEquipoForm({ equipoId, nombre, descripcion }: EditarEquipo
             {serverError}
           </div>
         )}
+
+        {/* Logo uploader (RF-10) */}
+        <div className="mb-6 pb-6 border-b">
+          <h2 className="text-sm font-semibold mb-3">Logo del equipo</h2>
+          <LogoUploader equipoId={equipoId} equipoName={nombre} logoUrl={logoUrl} />
+        </div>
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5">
             <FormField control={form.control} name="name" render={({ field }) => (
