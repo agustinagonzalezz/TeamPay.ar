@@ -8,11 +8,12 @@ import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { getCurrentUser } from "@/lib/auth"
 import { removeJugadora, updateJugadora, setCoCapitana } from "@/services/jugadoraService"
+import { updateJugadoraSchema } from "@/lib/validations/jugadora"
 
 type RouteParams = { params: Promise<{ equipoId: string; jugadoraId: string }> }
 
 const updateSchema = z.union([
-  z.object({ name: z.string().min(2, "Mínimo 2 caracteres").max(60).trim() }),
+  updateJugadoraSchema,
   z.object({ isCoCapitana: z.boolean() }),
 ])
 
@@ -34,7 +35,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     return NextResponse.json(result)
   }
 
-  const result = await updateJugadora(jugadoraId, equipoId, data.name, user.id)
+  const result = await updateJugadora(jugadoraId, equipoId, data, user.id)
   if (!result.success) return NextResponse.json(result, { status: 403 })
   return NextResponse.json(result)
 }

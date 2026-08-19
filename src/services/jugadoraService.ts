@@ -6,7 +6,7 @@
  */
 
 import { prisma } from "@/lib/prisma"
-import type { AddJugadoraInput } from "@/lib/validations/jugadora"
+import type { AddJugadoraInput, UpdateJugadoraInput } from "@/lib/validations/jugadora"
 import type { TeamMember } from "@/generated/prisma/client"
 
 type ServiceResult<T> =
@@ -79,6 +79,9 @@ export async function addJugadora(
         teamId,
         name: input.name.trim(),
         status: "ACTIVA",
+        phone: input.phone || null,
+        position: input.position || null,
+        shirtNumber: input.shirtNumber ?? null,
       },
     })
 
@@ -265,7 +268,7 @@ export async function setCoCapitana(
 export async function updateJugadora(
   jugadoraId: string,
   teamId: string,
-  name: string,
+  input: UpdateJugadoraInput,
   userId: string
 ): Promise<ServiceResult<TeamMember>> {
   try {
@@ -277,7 +280,12 @@ export async function updateJugadora(
 
     const updated = await prisma.teamMember.update({
       where: { id: jugadoraId },
-      data: { name: name.trim() },
+      data: {
+        name: input.name.trim(),
+        phone: input.phone || null,
+        position: input.position || null,
+        shirtNumber: input.shirtNumber ?? null,
+      },
     })
     return { success: true, data: updated }
   } catch (error) {

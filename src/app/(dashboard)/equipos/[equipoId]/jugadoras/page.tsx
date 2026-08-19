@@ -112,29 +112,42 @@ export default async function JugadorasPage({
 
                   {/* Nombre + badge */}
                   <div className="flex flex-1 items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium">{jugadora.name}</span>
-                      {esCapitana && (
-                        <EditJugadoraButton
-                          equipoId={equipoId}
-                          jugadoraId={jugadora.id}
-                          nombreActual={jugadora.name}
-                        />
-                      )}
-                      {esLaCapitana && (
-                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                          Capitana
-                        </span>
-                      )}
-                      {jugadora.isCoCapitana && !esLaCapitana && (
-                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                          Capitana
-                        </span>
-                      )}
-                      {jugadora.userId && !esLaCapitana && !jugadora.isCoCapitana && (
-                        <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                          Con cuenta
-                        </span>
+                    <div className="flex flex-col gap-0.5">
+                      <div className="flex items-center gap-2">
+                        {jugadora.shirtNumber && (
+                          <span className="rounded-full bg-muted px-1.5 py-0.5 text-xs font-semibold tabular-nums text-muted-foreground">
+                            #{jugadora.shirtNumber}
+                          </span>
+                        )}
+                        <span className="text-sm font-medium">{jugadora.name}</span>
+                        {esCapitana && (
+                          <EditJugadoraButton
+                            equipoId={equipoId}
+                            jugadoraId={jugadora.id}
+                            nombreActual={jugadora.name}
+                            phoneActual={jugadora.phone}
+                            positionActual={jugadora.position}
+                            shirtNumberActual={jugadora.shirtNumber}
+                          />
+                        )}
+                        {esLaCapitana && (
+                          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                            Capitana
+                          </span>
+                        )}
+                        {jugadora.isCoCapitana && !esLaCapitana && (
+                          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                            Capitana
+                          </span>
+                        )}
+                        {jugadora.userId && !esLaCapitana && !jugadora.isCoCapitana && (
+                          <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                            Con cuenta
+                          </span>
+                        )}
+                      </div>
+                      {jugadora.position && (
+                        <span className="text-xs text-muted-foreground">{jugadora.position}</span>
                       )}
                     </div>
 
