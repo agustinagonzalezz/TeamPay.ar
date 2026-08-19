@@ -82,6 +82,8 @@ model User {
   emailVerified DateTime?
   image         String?
   role          UserRole  @default(JUGADORA)
+  /// Hash de contraseña (bcrypt). Null para cuentas creadas con Google.
+  password      String?
 
   // ── Auth.js relations ──────────────────────────────────────────
   accounts Account[]

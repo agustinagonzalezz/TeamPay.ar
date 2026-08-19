@@ -16,9 +16,12 @@
 
 import NextAuth, { type DefaultSession } from "next-auth";
 import Google from "next-auth/providers/google";
+import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
+import bcrypt from "bcryptjs";
 import { authConfig } from "@/lib/auth.config";
 import { prisma } from "@/lib/prisma";
+import { loginSchema } from "@/lib/validations/auth";
 import { UserRole } from "@/generated/prisma/client";
 
 // ── Augmentación de tipos ─────────────────────────────────────────────────────
@@ -60,6 +63,36 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Google({
       clientId: process.env.AUTH_GOOGLE_ID!,
       clientSecret: process.env.AUTH_GOOGLE_SECRET!,
+    }),
+
+    // Login con email y contraseña. La cuenta debe existir, tener contraseña
+    // (no ser una cuenta de Google) y tener el email verificado.
+    Credentials({
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Contraseña", type: "password" },
+      },
+      async authorize(credentials) {
+        const parsed = loginSchema.safeParse(credentials);
+        if (!parsed.success) return null;
+
+        const user = await prisma.user.findUnique({
+          where: { email: parsed.data.email },
+        });
+        if (!user || !user.password || !user.emailVerified) return null;
+
+        const isValid = await bcrypt.compare(parsed.data.password, user.password);
+        if (!isValid) return null;
+
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          image: user.image,
+          role: user.role,
+          emailVerified: user.emailVerified,
+        };
+      },
     }),
   ],
 

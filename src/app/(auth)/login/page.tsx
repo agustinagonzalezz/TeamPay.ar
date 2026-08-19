@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { AuthError } from "next-auth";
 import { signIn } from "@/lib/auth";
+import { CredentialsLoginForm } from "@/components/auth/CredentialsLoginForm";
 
 export const metadata: Metadata = {
   title: "Iniciar sesión — TeamPayment.app",
@@ -24,6 +28,7 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   OAuthCallbackError: "Error en la respuesta de Google. Intentá de nuevo.",
   SessionRequired: "Necesitás iniciar sesión para acceder.",
   Configuration: "Error de configuración. Contactá al administrador.",
+  CredentialsSignin: "Email o contraseña incorrectos, o todavía no verificaste tu cuenta.",
   Default: "Ocurrió un error. Intentá de nuevo.",
 };
 
@@ -37,6 +42,22 @@ export default async function LoginPage({
     ? (AUTH_ERROR_MESSAGES[error] ?? AUTH_ERROR_MESSAGES.Default)
     : null;
   const redirectTo = callbackUrl ?? "/";
+
+  async function credentialsSignInAction(formData: FormData) {
+    "use server";
+    try {
+      await signIn("credentials", {
+        email: formData.get("email"),
+        password: formData.get("password"),
+        redirectTo,
+      });
+    } catch (err) {
+      if (err instanceof AuthError) {
+        redirect(`/login?error=${err.type}`);
+      }
+      throw err;
+    }
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-sm flex-col gap-10" style={{ fontFamily: "var(--font-syne)" }}>
@@ -87,6 +108,23 @@ export default async function LoginPage({
             Iniciar sesión con Google
           </button>
         </form>
+
+        {/* Separador */}
+        <div className="flex items-center gap-3">
+          <div className="h-px flex-1 bg-border" />
+          <span className="text-xs text-muted-foreground">o</span>
+          <div className="h-px flex-1 bg-border" />
+        </div>
+
+        {/* Login con email y contraseña */}
+        <CredentialsLoginForm action={credentialsSignInAction} errorMessage={errorMessage} />
+
+        <p className="text-center text-sm text-muted-foreground">
+          ¿No tenés cuenta?{" "}
+          <Link href="/registro" className="font-medium text-primary hover:underline">
+            Crear cuenta
+          </Link>
+        </p>
 
         <p className="text-center text-[11px] text-muted-foreground/70">
           Al continuar aceptás el uso de tus datos para gestionar<br />los pagos de tu equipo.
