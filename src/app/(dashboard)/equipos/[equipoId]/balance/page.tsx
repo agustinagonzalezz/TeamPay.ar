@@ -20,6 +20,7 @@ import {
   Calendar,
   Receipt,
   ChevronRight,
+  AlertCircle,
 } from "lucide-react"
 import { getCurrentUser } from "@/lib/auth"
 import { getTeamBalance } from "@/services/balanceService"
@@ -29,6 +30,7 @@ import { getDeudorasParaWhatsApp } from "@/services/notificacionService"
 import { Card } from "@/components/ui/card"
 import { buttonVariants } from "@/components/ui/button"
 import { WhatsAppMensaje } from "@/components/notificaciones/WhatsAppMensaje"
+import { RankingDeudoras } from "@/components/balance/RankingDeudoras"
 import { PeriodoFilter } from "@/components/balance/PeriodoFilter"
 import { ExportarExcelButton } from "@/components/balance/ExportarExcelButton"
 import { formatCurrency, formatDateShort, cn } from "@/lib/utils"
@@ -332,6 +334,19 @@ export default async function BalancePage({
           </Card>
         )}
       </section>
+
+      {/* ── Ranking de deudoras ────────────────────────────────────────── */}
+      {deudorasData && (
+        <section aria-labelledby="ranking-deudoras-heading">
+          <div className="mb-4 flex items-center gap-2">
+            <AlertCircle className="size-4 text-amber-500" aria-hidden="true" />
+            <h2 id="ranking-deudoras-heading" className="text-lg font-semibold">
+              Jugadoras con deuda pendiente
+            </h2>
+          </div>
+          <RankingDeudoras data={deudorasData} />
+        </section>
+      )}
 
       {/* ── Gastos recientes ───────────────────────────────────────────── */}
       <section aria-labelledby="gastos-balance-heading">
