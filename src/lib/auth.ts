@@ -118,13 +118,32 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
      * Ejecutado al crear o refrescar el JWT.
      * `user` sólo está disponible en el primer sign-in.
      */
-    jwt({ token, user }) {
+    async jwt({ token, user }) {
       if (user) {
         // user.id es siempre string cuando viene de PrismaAdapter (es el PK)
         // Auth.js lo tipea como string | undefined por compatibilidad general
         token.id = user.id!;
         token.role = user.role;
+        return token;
       }
+
+      // Esta app no usa SessionProvider/useSession del lado del cliente — toda
+      // la sesión se lee server-side vía auth(). Sin este refresh, token.name/
+      // token.picture quedarían congelados con los valores del login inicial:
+      // editar el nombre o subir una foto de perfil no se vería reflejado
+      // hasta cerrar sesión y volver a entrar.
+      if (token.id) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id },
+          select: { name: true, image: true, role: true },
+        });
+        if (dbUser) {
+          token.name = dbUser.name;
+          token.picture = dbUser.image;
+          token.role = dbUser.role;
+        }
+      }
+
       return token;
     },
 
