@@ -12,8 +12,13 @@ import { notFound, redirect } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
 import { getCurrentUser } from "@/lib/auth"
 import { getTeamById } from "@/services/teamService"
-import { getJugadorasByTeam } from "@/services/jugadoraService"
+import {
+  getJugadorasByTeam,
+  type JugadorasEstado,
+  type JugadorasOrden,
+} from "@/services/jugadoraService"
 import { AddJugadoraForm } from "@/components/jugadoras/AddJugadoraForm"
+import { JugadorasFilters } from "@/components/jugadoras/JugadorasFilters"
 import { RemoveJugadoraButton } from "@/components/jugadoras/RemoveJugadoraButton"
 import { EditJugadoraButton } from "@/components/jugadoras/EditJugadoraButton"
 import { CoCapitanaButton } from "@/components/jugadoras/CoCapitanaButton"
@@ -26,12 +31,21 @@ export const metadata: Metadata = {
   title: "Jugadoras — TeamPayment.app",
 }
 
+const ORDENES_VALIDOS: JugadorasOrden[] = ["nombre_asc", "nombre_desc", "camiseta", "posicion"]
+const ESTADOS_VALIDOS: JugadorasEstado[] = ["ACTIVA", "INACTIVA", "TODAS"]
+
 export default async function JugadorasPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ equipoId: string }>
+  searchParams: Promise<{ q?: string; orden?: string; estado?: string }>
 }) {
   const { equipoId } = await params
+  const { q, orden: rawOrden, estado: rawEstado } = await searchParams
+
+  const orden = (ORDENES_VALIDOS.includes(rawOrden as JugadorasOrden) ? rawOrden : "nombre_asc") as JugadorasOrden
+  const estado = (ESTADOS_VALIDOS.includes(rawEstado as JugadorasEstado) ? rawEstado : "ACTIVA") as JugadorasEstado
 
   const user = await getCurrentUser()
   if (!user) redirect("/login")
@@ -45,10 +59,11 @@ export default async function JugadorasPage({
   const esCapitanaPrincipal = equipo.ownerId === user.id  // solo el owner puede gestionar co-capitanas
 
   // Obtener jugadoras
-  const jugadorasResult = await getJugadorasByTeam(equipoId, user.id)
+  const jugadorasResult = await getJugadorasByTeam(equipoId, user.id, { search: q, orden, estado })
   if (!jugadorasResult.success) notFound()
 
   const jugadoras = jugadorasResult.data
+  const hayFiltrosActivos = Boolean(q) || orden !== "nombre_asc" || estado !== "ACTIVA"
 
   return (
     <div className="flex flex-col gap-6">
@@ -64,9 +79,10 @@ export default async function JugadorasPage({
         </Link>
         <h1 className="text-2xl font-bold tracking-tight">Jugadoras</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {jugadoras.length === 1
-            ? "1 jugadora activa en el equipo"
-            : `${jugadoras.length} jugadoras activas en el equipo`}
+          {jugadoras.length} {jugadoras.length === 1 ? "jugadora" : "jugadoras"}
+          {estado === "ACTIVA" && " activas"}
+          {estado === "INACTIVA" && " dadas de baja"}
+          {" "}en el equipo
         </p>
       </div>
 
@@ -84,11 +100,16 @@ export default async function JugadorasPage({
         </div>
       )}
 
+      {/* ── Búsqueda / orden / filtro por estado ─────────────────────────── */}
+      <JugadorasFilters qActual={q ?? ""} ordenActual={orden} estadoActual={estado} />
+
       {/* ── Lista de jugadoras ───────────────────────────────────────────── */}
       {jugadoras.length === 0 ? (
         <div className="rounded-xl border border-dashed py-12 text-center">
           <p className="text-sm text-muted-foreground">
-            Todavía no hay jugadoras. ¡Agregá la primera!
+            {hayFiltrosActivos
+              ? "No hay jugadoras que coincidan con esos filtros."
+              : "Todavía no hay jugadoras. ¡Agregá la primera!"}
           </p>
         </div>
       ) : (
@@ -145,6 +166,11 @@ export default async function JugadorasPage({
                             Con cuenta
                           </span>
                         )}
+                        {jugadora.status === "INACTIVA" && (
+                          <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
+                            Dada de baja
+                          </span>
+                        )}
                       </div>
                       {jugadora.position && (
                         <span className="text-xs text-muted-foreground">{jugadora.position}</span>
@@ -161,8 +187,8 @@ export default async function JugadorasPage({
                           isCoCapitana={jugadora.isCoCapitana}
                         />
                       )}
-                      {/* Botón de baja: solo capitana, no sobre sí misma */}
-                      {esCapitana && !esLaCapitana && (
+                      {/* Botón de baja: solo capitana, no sobre sí misma, no si ya está inactiva */}
+                      {esCapitana && !esLaCapitana && jugadora.status === "ACTIVA" && (
                         <RemoveJugadoraButton
                           equipoId={equipoId}
                           jugadoraId={jugadora.id}

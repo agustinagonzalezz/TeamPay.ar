@@ -8,10 +8,34 @@
 import { prisma } from "@/lib/prisma"
 import type { AddJugadoraInput, UpdateJugadoraInput } from "@/lib/validations/jugadora"
 import type { TeamMember } from "@/generated/prisma/client"
+import { Prisma } from "@/generated/prisma/client"
 
 type ServiceResult<T> =
   | { success: true; data: T }
   | { success: false; error: string }
+
+export type JugadorasOrden = "nombre_asc" | "nombre_desc" | "camiseta" | "posicion"
+export type JugadorasEstado = "ACTIVA" | "INACTIVA" | "TODAS"
+
+export interface GetJugadorasOptions {
+  search?: string
+  estado?: JugadorasEstado
+  orden?: JugadorasOrden
+}
+
+function buildJugadorasOrderBy(orden?: JugadorasOrden): Prisma.TeamMemberOrderByWithRelationInput[] {
+  switch (orden) {
+    case "nombre_desc":
+      return [{ name: "desc" }]
+    case "camiseta":
+      return [{ shirtNumber: { sort: "asc", nulls: "last" } }, { name: "asc" }]
+    case "posicion":
+      return [{ position: { sort: "asc", nulls: "last" } }, { name: "asc" }]
+    case "nombre_asc":
+    default:
+      return [{ name: "asc" }]
+  }
+}
 
 // ── isCapitana ────────────────────────────────────────────────────────────────
 
@@ -29,12 +53,14 @@ async function isCapitana(teamId: string, userId: string): Promise<boolean> {
 // ── getJugadorasByTeam ────────────────────────────────────────────────────────
 
 /**
- * Retorna todas las jugadoras activas del equipo.
+ * Retorna las jugadoras del equipo (por defecto, solo las activas, ordenadas por
+ * nombre) — RF-17: acepta búsqueda por nombre, orden y filtro por estado opcionales.
  * Verifica que el solicitante sea miembro del equipo.
  */
 export async function getJugadorasByTeam(
   teamId: string,
-  userId: string
+  userId: string,
+  options?: GetJugadorasOptions
 ): Promise<ServiceResult<TeamMember[]>> {
   try {
     // Verificar que el usuario pertenece al equipo
@@ -46,9 +72,16 @@ export async function getJugadorasByTeam(
       return { success: false, error: "No tenés acceso a este equipo." }
     }
 
+    const estado = options?.estado ?? "ACTIVA"
+    const search = options?.search?.trim()
+
     const jugadoras = await prisma.teamMember.findMany({
-      where: { teamId, status: "ACTIVA" },
-      orderBy: { name: "asc" },
+      where: {
+        teamId,
+        ...(estado !== "TODAS" ? { status: estado } : {}),
+        ...(search ? { name: { contains: search, mode: "insensitive" } } : {}),
+      },
+      orderBy: buildJugadorasOrderBy(options?.orden),
     })
 
     return { success: true, data: jugadoras }

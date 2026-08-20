@@ -23,6 +23,7 @@ import { getCurrentUser } from "@/lib/auth"
 import { getMySituacion } from "@/services/perfilService"
 import { SignOutButton } from "@/components/shared/SignOutButton"
 import { EditNombreButton } from "@/components/shared/EditNombreButton"
+import { EditFotoButton } from "@/components/shared/EditFotoButton"
 import { DeleteAccountButton } from "@/components/shared/DeleteAccountButton"
 import { Card, CardContent } from "@/components/ui/card"
 import { buttonVariants } from "@/components/ui/button"
@@ -52,19 +53,11 @@ export default async function PerfilPage() {
       {/* ── Header de perfil ─────────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          {user.image ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={user.image}
-              alt={user.name ?? "Avatar"}
-              className="size-14 rounded-full object-cover ring-2 ring-border"
-              referrerPolicy="no-referrer"
-            />
-          ) : (
-            <div className="flex size-14 items-center justify-center rounded-full bg-primary/10 text-xl font-bold text-primary">
-              {(user.name ?? user.email ?? "?").charAt(0).toUpperCase()}
-            </div>
-          )}
+          <EditFotoButton
+            imagenActual={user.image ?? null}
+            nombre={user.name ?? user.email ?? "?"}
+            esFotoPropia={Boolean(user.image?.includes(".public.blob.vercel-storage.com"))}
+          />
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-xl font-bold tracking-tight">
