@@ -48,7 +48,7 @@ Cada requerimiento tiene un identificador (`RF-XX`), prioridad y la fase en la q
 
 | ID | Requerimiento | Prioridad | Fase |
 |----|---------------|-----------|------|
-| RF-01 | El sistema debe permitir el registro de usuarias mediante cuenta de Google (OAuth). | 🔴 Alta | 1 |
+| RF-01 | El sistema debe permitir el registro de usuarias mediante cuenta de Google (OAuth) o mediante email y contraseña, con verificación de email obligatoria en este último caso. | 🔴 Alta | 1 |
 | RF-02 | El sistema debe permitir el inicio y cierre de sesión. | 🔴 Alta | 1 |
 | RF-03 | El sistema debe mantener la sesión activa entre visitas (recordar usuaria). | 🔴 Alta | 1 |
 | RF-04 | El sistema debe permitir a la usuaria ver y editar su perfil básico (nombre, foto). | 🟡 Media | 1 |
