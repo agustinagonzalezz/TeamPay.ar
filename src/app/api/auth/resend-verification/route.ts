@@ -9,12 +9,21 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import { resendVerificationEmail } from "@/services/authService"
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit"
 
 const resendSchema = z.object({
   email: z.string().min(1).email("Ingresá un email válido").trim().toLowerCase(),
 })
 
 export async function POST(req: Request) {
+  const { success: withinLimit } = await checkRateLimit(getClientIp(req))
+  if (!withinLimit) {
+    return NextResponse.json(
+      { success: false, error: "Demasiados intentos. Esperá unos minutos y probá de nuevo." },
+      { status: 429 }
+    )
+  }
+
   let body: unknown
   try {
     body = await req.json()

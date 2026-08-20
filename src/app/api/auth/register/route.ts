@@ -8,8 +8,17 @@
 import { NextResponse } from "next/server"
 import { registerUser } from "@/services/authService"
 import { registerSchema } from "@/lib/validations/auth"
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit"
 
 export async function POST(req: Request) {
+  const { success: withinLimit } = await checkRateLimit(getClientIp(req))
+  if (!withinLimit) {
+    return NextResponse.json(
+      { success: false, error: "Demasiados intentos. Esperá unos minutos y probá de nuevo." },
+      { status: 429 }
+    )
+  }
+
   let body: unknown
   try {
     body = await req.json()

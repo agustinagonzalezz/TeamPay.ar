@@ -50,6 +50,11 @@ declare module "@auth/core/jwt" {
   }
 }
 
+// Hash dummy fijo usado para mitigar timing attacks en authorize(): cuando el
+// email no existe (o la cuenta no tiene password), igual corremos un bcrypt.compare()
+// contra este hash para que el tiempo de respuesta no delate si la cuenta existe.
+const DUMMY_PASSWORD_HASH = bcrypt.hashSync("dummy-password", 12);
+
 // ── Instancia principal ───────────────────────────────────────────────────────
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -79,7 +84,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const user = await prisma.user.findUnique({
           where: { email: parsed.data.email },
         });
-        if (!user || !user.password || !user.emailVerified) return null;
+
+        if (!user || !user.password || !user.emailVerified) {
+          // Sin esto, esta rama respondería más rápido que la de contraseña
+          // incorrecta y filtraría por timing si el email existe o no.
+          await bcrypt.compare(parsed.data.password, DUMMY_PASSWORD_HASH);
+          return null;
+        }
 
         const isValid = await bcrypt.compare(parsed.data.password, user.password);
         if (!isValid) return null;
