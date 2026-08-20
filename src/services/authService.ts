@@ -183,15 +183,16 @@ export async function resetPassword(token: string, newPassword: string): Promise
 
     const hashedPassword = await bcrypt.hash(newPassword, PASSWORD_HASH_COST)
 
-    await prisma.user.update({
-      where: { email: record.email },
-      data: { password: hashedPassword },
-    })
-
-    await prisma.passwordResetToken.update({
-      where: { id: record.id },
-      data: { used: true },
-    })
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { email: record.email },
+        data: { password: hashedPassword },
+      }),
+      prisma.passwordResetToken.update({
+        where: { id: record.id },
+        data: { used: true },
+      }),
+    ])
 
     return { success: true, data: null }
   } catch (error) {
