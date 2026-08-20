@@ -35,9 +35,9 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ callbackUrl?: string; error?: string }>;
+  searchParams: Promise<{ callbackUrl?: string; error?: string; reset?: string }>;
 }) {
-  const { callbackUrl, error } = await searchParams;
+  const { callbackUrl, error, reset } = await searchParams;
   const errorMessage = error
     ? (AUTH_ERROR_MESSAGES[error] ?? AUTH_ERROR_MESSAGES.Default)
     : null;
@@ -85,6 +85,15 @@ export default async function LoginPage({
 
       {/* Sign in */}
       <div className="flex flex-col gap-4">
+        {reset === "1" && !errorMessage && (
+          <div
+            role="status"
+            className="rounded-lg border border-primary/30 bg-primary/8 px-3 py-2.5 text-sm text-primary"
+          >
+            Contraseña actualizada. Ya podés iniciar sesión.
+          </div>
+        )}
+
         {errorMessage && (
           <div
             role="alert"
@@ -118,6 +127,12 @@ export default async function LoginPage({
 
         {/* Login con email y contraseña */}
         <CredentialsLoginForm action={credentialsSignInAction} errorMessage={errorMessage} />
+
+        <p className="text-center text-sm">
+          <Link href="/olvide-contrasena" className="font-medium text-muted-foreground hover:text-primary hover:underline">
+            ¿Olvidaste tu contraseña?
+          </Link>
+        </p>
 
         <p className="text-center text-sm text-muted-foreground">
           ¿No tenés cuenta?{" "}

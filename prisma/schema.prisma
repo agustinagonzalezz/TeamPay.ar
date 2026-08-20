@@ -143,6 +143,20 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+/// Token de un solo uso para el flujo de "olvidé mi contraseña".
+/// Separado de VerificationToken porque ese es interno de Auth.js
+/// (verificación de cuenta), no de restablecimiento de contraseña.
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expires   DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
+
 // ═════════════════════════════════════════════════════════════════════════════
 // DOMAIN — Modelos de negocio
 // ═════════════════════════════════════════════════════════════════════════════

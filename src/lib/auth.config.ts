@@ -15,7 +15,13 @@
 import type { NextAuthConfig } from "next-auth";
 
 // Rutas públicas por prefijo (startsWith)
-const PUBLIC_PREFIXES = ["/login", "/registro", "/verificar-email"];
+const PUBLIC_PREFIXES = [
+  "/login",
+  "/registro",
+  "/verificar-email",
+  "/olvide-contrasena",
+  "/restablecer-contrasena",
+];
 // Rutas públicas por coincidencia exacta
 const PUBLIC_EXACT = ["/"];
 

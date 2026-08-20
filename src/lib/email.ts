@@ -45,3 +45,32 @@ export async function sendVerificationEmail(email: string, token: string): Promi
     `,
   })
 }
+
+export async function sendPasswordResetEmail(email: string, token: string): Promise<void> {
+  const resetUrl = `${process.env.AUTH_URL}/restablecer-contrasena?token=${token}`
+
+  await getResendClient().emails.send({
+    from: FROM,
+    to: email,
+    subject: "Restablecé tu contraseña en TeamPayment.app",
+    html: `
+      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; color: #1a1a1a;">
+        <h2 style="margin-bottom: 4px;">Restablecé tu contraseña</h2>
+        <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta. Hacé click en el siguiente botón para elegir una nueva:</p>
+        <p style="text-align: center; margin: 28px 0;">
+          <a
+            href="${resetUrl}"
+            style="background: #6d28d9; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;"
+          >
+            Restablecer contraseña
+          </a>
+        </p>
+        <p>Si el botón no te funciona, copiá y pegá este link en tu navegador:</p>
+        <p style="word-break: break-all;"><a href="${resetUrl}">${resetUrl}</a></p>
+        <p style="color: #666; font-size: 13px; margin-top: 24px;">
+          Este link expira en 1 hora. Si vos no pediste este cambio, podés ignorar este email tranquilamente — tu contraseña actual sigue funcionando.
+        </p>
+      </div>
+    `,
+  })
+}

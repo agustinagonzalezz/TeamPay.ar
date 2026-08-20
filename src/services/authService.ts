@@ -8,7 +8,7 @@
 import crypto from "node:crypto"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
-import { sendVerificationEmail } from "@/lib/email"
+import { sendVerificationEmail, sendPasswordResetEmail } from "@/lib/email"
 import type { RegisterInput } from "@/lib/validations/auth"
 
 type ServiceResult<T> =
@@ -17,6 +17,7 @@ type ServiceResult<T> =
 
 const PASSWORD_HASH_COST = 12
 const VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000
+const PASSWORD_RESET_TOKEN_TTL_MS = 60 * 60 * 1000
 
 // ── registerUser ─────────────────────────────────────────────────────────────
 
@@ -119,6 +120,83 @@ export async function resendVerificationEmail(email: string): Promise<ServiceRes
   } catch (error) {
     console.error("[authService.resendVerificationEmail]", error)
     return generic
+  }
+}
+
+// ── requestPasswordReset ───────────────────────────────────────────────────────
+
+/**
+ * Solicita el restablecimiento de contraseña. Devuelve siempre el mismo resultado
+ * de éxito, exista o no la cuenta y tenga o no contraseña (cuenta de Google), para
+ * evitar enumeración de usuarios — mismo criterio que resendVerificationEmail.
+ */
+export async function requestPasswordReset(email: string): Promise<ServiceResult<null>> {
+  const generic: ServiceResult<null> = { success: true, data: null }
+
+  try {
+    const user = await prisma.user.findUnique({ where: { email } })
+    if (!user || !user.password) {
+      return generic
+    }
+
+    await prisma.passwordResetToken.deleteMany({ where: { email, used: false } })
+
+    const token = crypto.randomBytes(32).toString("hex")
+    const expires = new Date(Date.now() + PASSWORD_RESET_TOKEN_TTL_MS)
+
+    await prisma.passwordResetToken.create({
+      data: { email, token, expires, used: false },
+    })
+
+    try {
+      await sendPasswordResetEmail(email, token)
+    } catch (emailError) {
+      // El token ya quedó guardado. Si el envío falla, la usuaria puede volver a
+      // pedir el reset una vez resuelto el problema — no lo reportamos como error.
+      console.error("[authService.requestPasswordReset] no se pudo enviar el email", emailError)
+    }
+
+    return generic
+  } catch (error) {
+    console.error("[authService.requestPasswordReset]", error)
+    return generic
+  }
+}
+
+// ── resetPassword ────────────────────────────────────────────────────────────
+
+/**
+ * Restablece la contraseña a partir de un token válido, no usado y no expirado.
+ */
+export async function resetPassword(token: string, newPassword: string): Promise<ServiceResult<null>> {
+  const invalidTokenError: ServiceResult<null> = {
+    success: false,
+    error: "El link no es válido o expiró. Solicitá uno nuevo.",
+  }
+
+  try {
+    const record = await prisma.passwordResetToken.findUnique({ where: { token } })
+
+    if (!record || record.used || record.expires < new Date()) {
+      return invalidTokenError
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, PASSWORD_HASH_COST)
+
+    await prisma.user.update({
+      where: { email: record.email },
+      data: { password: hashedPassword },
+    })
+
+    await prisma.passwordResetToken.update({
+      where: { id: record.id },
+      data: { used: true },
+    })
+
+    return { success: true, data: null }
+  } catch (error) {
+    console.error("[authService.resetPassword]", error)
+    return invalidTokenError
   }
 }
 
