@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import Link from "next/link"
+import { Infinity as InfinityIcon } from "lucide-react"
 import { getCurrentUser } from "@/lib/auth"
 
 export const metadata: Metadata = {
@@ -34,8 +35,8 @@ const FEATURES = [
 const STEPS = [
   {
     number: "01",
-    title: "Entrás con Google",
-    description: "Sin contraseñas. Un click y ya estás dentro.",
+    title: "Creás tu cuenta",
+    description: "Con Google o con tu email. Rápido y gratis.",
   },
   {
     number: "02",
@@ -153,7 +154,7 @@ function Hero() {
             {[
               { value: "100%", label: "Gratis para arrancar" },
               { value: "5 min", label: "Setup del equipo" },
-              { value: "∞", label: "Jugadoras" },
+              { value: <InfinityIcon className="size-6" strokeWidth={3} aria-label="Sin límite" />, label: "Jugadoras" },
             ].map(({ value, label }) => (
               <div key={label} className="flex flex-col gap-0.5">
                 <span
