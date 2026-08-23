@@ -9,6 +9,7 @@
 
 import { useState } from "react"
 import { Check, Link2 } from "lucide-react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 
 interface CopyInviteLinkButtonProps {
@@ -26,7 +27,7 @@ export function CopyInviteLinkButton({ equipoId }: CopyInviteLinkButtonProps) {
       setTimeout(() => setCopied(false), 2000)
     } catch {
       // Fallback para navegadores que no soportan clipboard API
-      prompt("Copiá este link para invitar jugadoras:", url)
+      toast.error("No se pudo copiar automáticamente", { description: url })
     }
   }
 

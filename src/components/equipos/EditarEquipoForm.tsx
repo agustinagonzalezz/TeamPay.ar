@@ -6,11 +6,23 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { ArrowLeft, Loader2, Trash2 } from "lucide-react"
 import Link from "next/link"
+import { toast } from "sonner"
 import { updateTeamSchema, type UpdateTeamInput } from "@/lib/validations/team"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Button, buttonVariants } from "@/components/ui/button"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { cn } from "@/lib/utils"
 import { LogoUploader } from "./LogoUploader"
 
@@ -24,6 +36,7 @@ interface EditarEquipoFormProps {
 export function EditarEquipoForm({ equipoId, nombre, descripcion, logoUrl }: EditarEquipoFormProps) {
   const router = useRouter()
   const [serverError, setServerError] = useState<string | null>(null)
+  const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
   const form = useForm<UpdateTeamInput>({
@@ -59,16 +72,19 @@ export function EditarEquipoForm({ equipoId, nombre, descripcion, logoUrl }: Edi
   }
 
   async function handleDelete() {
-    if (!confirm(`¿Segura que querés eliminar el equipo "${nombre}"? Esta acción no se puede deshacer y se borrarán todos los eventos, pagos y gastos asociados.`)) return
     setDeleting(true)
     try {
       const res = await fetch(`/api/equipos/${equipoId}`, { method: "DELETE" })
       const data = await res.json() as { success: boolean; error?: string }
-      if (!res.ok || !data.success) { alert(data.error ?? "No se pudo eliminar el equipo."); return }
+      if (!res.ok || !data.success) {
+        toast.error(data.error ?? "No se pudo eliminar el equipo.")
+        return
+      }
+      setDeleteOpen(false)
       router.push("/equipos")
       router.refresh()
     } catch {
-      alert("No se pudo conectar con el servidor.")
+      toast.error("No se pudo conectar con el servidor.")
     } finally {
       setDeleting(false)
     }
@@ -133,16 +149,36 @@ export function EditarEquipoForm({ equipoId, nombre, descripcion, logoUrl }: Edi
         <p className="mt-1 text-sm text-muted-foreground">
           Eliminar el equipo borrará permanentemente todos sus eventos, pagos y gastos.
         </p>
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-4 border-destructive/40 text-destructive hover:bg-destructive/10"
-          disabled={deleting}
-          onClick={handleDelete}
-        >
-          {deleting ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
-          {deleting ? "Eliminando..." : "Eliminar equipo"}
-        </Button>
+        <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+          <AlertDialogTrigger
+            render={
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-4 border-destructive/40 text-destructive hover:bg-destructive/10"
+                disabled={deleting}
+              />
+            }
+          >
+            <Trash2 className="size-4" />
+            Eliminar equipo
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Eliminar el equipo &quot;{nombre}&quot;?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta acción no se puede deshacer y se borrarán todos los eventos, pagos y gastos asociados.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction variant="destructive" onClick={handleDelete} disabled={deleting}>
+                {deleting && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
+                {deleting ? "Eliminando..." : "Eliminar equipo"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   )

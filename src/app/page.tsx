@@ -132,8 +132,7 @@ function Hero() {
 
           <p className="max-w-sm text-[15px] leading-relaxed" style={{ color: "#5a5450" }}>
             Cuotas, gastos y balance de tu equipo de fútbol
-            en un solo lugar. Para capitanes y capitanas.
-            Sin planillas, sin quilombos.
+            en un solo lugar.
           </p>
 
           <div className="flex flex-wrap items-center gap-4">
@@ -154,7 +153,7 @@ function Hero() {
             {[
               { value: "100%", label: "Gratis para arrancar" },
               { value: "5 min", label: "Setup del equipo" },
-              { value: <InfinityIcon className="size-6" strokeWidth={3} aria-label="Sin límite" />, label: "Jugadoras" },
+              { value: <InfinityIcon className="size-6" strokeWidth={3} aria-label="Sin límite" />, label: "Jugadoras/os" },
             ].map(({ value, label }) => (
               <div key={label} className="flex flex-col gap-0.5">
                 <span
@@ -213,7 +212,7 @@ function MockDashboard() {
       {/* Stats */}
       <div className="grid grid-cols-3 border-b" style={{ borderColor: "#f0eee8" }}>
         {[
-          { n: "14", label: "Jugadoras" },
+          { n: "14", label: "Jugadoras/os" },
           { n: "5", label: "Eventos" },
           { n: "$84.500", label: "Balance" },
         ].map(({ n, label }, i) => (

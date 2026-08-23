@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Download, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 
 interface ExportarExcelButtonProps {
@@ -24,7 +25,7 @@ export function ExportarExcelButton({ equipoId, desde, hasta }: ExportarExcelBut
       const res = await fetch(url)
 
       if (!res.ok) {
-        alert("No se pudo generar el archivo.")
+        toast.error("No se pudo generar el archivo.")
         return
       }
 

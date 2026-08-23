@@ -9,7 +9,19 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 import { Loader2, Trash2 } from "lucide-react"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface DeleteGastoButtonProps {
   gastoId: string
@@ -23,13 +35,10 @@ export function DeleteGastoButton({
   concepto,
 }: DeleteGastoButtonProps) {
   const router = useRouter()
+  const [open, setOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
   async function handleDelete() {
-    if (!confirm(`¿Eliminar el gasto "${concepto}"? Esta acción no se puede deshacer.`)) {
-      return
-    }
-
     setIsLoading(true)
     try {
       const res = await fetch(
@@ -39,31 +48,40 @@ export function DeleteGastoButton({
       const data = (await res.json()) as { success: boolean; error?: string }
 
       if (!res.ok || !data.success) {
-        alert(data.error ?? "No se pudo eliminar el gasto.")
+        toast.error(data.error ?? "No se pudo eliminar el gasto.")
         return
       }
 
+      setOpen(false)
       router.refresh()
     } catch {
-      alert("Error de conexión. Intentá de nuevo.")
+      toast.error("Error de conexión. Intentá de nuevo.")
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleDelete}
-      disabled={isLoading}
-      aria-label={`Eliminar gasto: ${concepto}`}
-      className="rounded-md p-1 text-muted-foreground transition-colors hover:text-destructive disabled:pointer-events-none disabled:opacity-50"
-    >
-      {isLoading ? (
-        <Loader2 className="size-4 animate-spin" />
-      ) : (
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      <AlertDialogTrigger
+        className="rounded-md p-1 text-muted-foreground transition-colors hover:text-destructive disabled:pointer-events-none disabled:opacity-50"
+        aria-label={`Eliminar gasto: ${concepto}`}
+      >
         <Trash2 className="size-4" />
-      )}
-    </button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>¿Eliminar el gasto &quot;{concepto}&quot;?</AlertDialogTitle>
+          <AlertDialogDescription>Esta acción no se puede deshacer.</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isLoading}>Cancelar</AlertDialogCancel>
+          <AlertDialogAction variant="destructive" onClick={handleDelete} disabled={isLoading}>
+            {isLoading && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
+            {isLoading ? "Eliminando..." : "Eliminar"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   )
 }

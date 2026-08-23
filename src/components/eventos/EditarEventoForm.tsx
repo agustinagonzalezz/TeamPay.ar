@@ -6,11 +6,23 @@ import { useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { ArrowLeft, ChevronDown, ChevronUp, Loader2, Plus, Trash2, Users } from "lucide-react"
 import Link from "next/link"
+import { toast } from "sonner"
 import { createEventoSchema, type CreateEventoInput, EVENT_TYPE_LABELS } from "@/lib/validations/evento"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { formatCurrency, cn } from "@/lib/utils"
 
 // ── Tipos locales ─────────────────────────────────────────────────────────────
@@ -34,6 +46,7 @@ interface EditarEventoFormProps {
 export function EditarEventoForm({ equipoId, eventoId, playerCount, defaults, defaultItems }: EditarEventoFormProps) {
   const router = useRouter()
   const [serverError, setServerError] = useState<string | null>(null)
+  const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
   // ── Estado del desglose ───────────────────────────────────────────────────
@@ -121,16 +134,19 @@ export function EditarEventoForm({ equipoId, eventoId, playerCount, defaults, de
 
   // ── Eliminar evento ───────────────────────────────────────────────────────
   async function handleDelete() {
-    if (!confirm("¿Segura que querés eliminar este evento? Solo se puede si no tiene pagos registrados.")) return
     setDeleting(true)
     try {
       const res = await fetch(`/api/equipos/${equipoId}/eventos/${eventoId}`, { method: "DELETE" })
       const data = await res.json() as { success: boolean; error?: string }
-      if (!res.ok || !data.success) { alert(data.error ?? "No se pudo eliminar."); return }
+      if (!res.ok || !data.success) {
+        toast.error(data.error ?? "No se pudo eliminar.")
+        return
+      }
+      setDeleteOpen(false)
       router.push(`/equipos/${equipoId}`)
       router.refresh()
     } catch {
-      alert("No se pudo conectar con el servidor.")
+      toast.error("No se pudo conectar con el servidor.")
     } finally {
       setDeleting(false)
     }
@@ -352,16 +368,36 @@ export function EditarEventoForm({ equipoId, eventoId, playerCount, defaults, de
         <p className="mt-1 text-sm text-muted-foreground">
           Solo se puede eliminar si el evento no tiene pagos registrados.
         </p>
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-4 border-destructive/40 text-destructive hover:bg-destructive/10"
-          disabled={deleting}
-          onClick={handleDelete}
-        >
-          {deleting ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
-          {deleting ? "Eliminando..." : "Eliminar evento"}
-        </Button>
+        <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+          <AlertDialogTrigger
+            render={
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-4 border-destructive/40 text-destructive hover:bg-destructive/10"
+                disabled={deleting}
+              />
+            }
+          >
+            <Trash2 className="size-4" />
+            Eliminar evento
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Eliminar este evento?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Solo se puede si no tiene pagos registrados. Esta acción no se puede deshacer.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction variant="destructive" onClick={handleDelete} disabled={deleting}>
+                {deleting && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
+                {deleting ? "Eliminando..." : "Eliminar evento"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   )
