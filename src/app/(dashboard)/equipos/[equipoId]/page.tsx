@@ -82,31 +82,33 @@ export default async function EquipoPage({
       {/* ── HERO — nombre del equipo ───────────────────────────────────── */}
       <div
         className="relative overflow-hidden rounded-2xl px-6 py-8 sm:px-10 sm:py-10"
-        style={{ background: "oklch(0.52 0.22 285)" }}
+        style={{ background: "var(--primary)" }}
       >
         {/* Inicial decorativa de fondo */}
         <span
           className="pointer-events-none absolute -right-3 -top-4 select-none leading-none tracking-tighter text-[11rem] font-black sm:text-[14rem]"
           style={{
             fontFamily: "var(--font-barlow)",
-            color: "oklch(0.99 0 0 / 0.08)",
+            color: "color-mix(in oklch, var(--primary-foreground) 8%, transparent)",
           }}
           aria-hidden="true"
         >
           {equipo.name.charAt(0).toUpperCase()}
         </span>
 
-        {/* Franja de acento — violeta más claro */}
+        {/* Franja de acento — versión más clara del color principal */}
         <div
           className="absolute left-0 top-0 h-full w-1.5 rounded-l-2xl"
-          style={{ background: "linear-gradient(to bottom, oklch(0.82 0.1 285), oklch(0.72 0.16 285))" }}
+          style={{
+            background: "linear-gradient(to bottom, color-mix(in oklch, var(--primary) 40%, white), color-mix(in oklch, var(--primary) 65%, white))",
+          }}
         />
 
         {/* Contenido */}
         <div className="relative flex flex-col gap-3">
           {/* Logo (RF-10) */}
           {equipo.logoUrl && (
-            <div className="relative h-20 w-20 rounded-lg overflow-hidden border-2" style={{ borderColor: "oklch(0.99 0 0 / 0.2)" }}>
+            <div className="relative h-20 w-20 rounded-lg overflow-hidden border-2" style={{ borderColor: "color-mix(in oklch, var(--primary-foreground) 20%, transparent)" }}>
               <Image
                 src={equipo.logoUrl}
                 alt={equipo.name}
@@ -120,7 +122,7 @@ export default async function EquipoPage({
           <div className="flex items-start justify-between gap-4">
             <h1
               className="text-5xl font-black leading-none tracking-tight sm:text-6xl lg:text-7xl"
-              style={{ fontFamily: "var(--font-barlow)", color: "oklch(0.99 0 0)" }}
+              style={{ fontFamily: "var(--font-barlow)", color: "var(--primary-foreground)" }}
             >
               {equipo.name.toUpperCase()}
             </h1>
@@ -131,14 +133,14 @@ export default async function EquipoPage({
                 title="Editar equipo"
                 aria-label="Editar equipo"
               >
-                <Settings className="size-5" style={{ color: "oklch(0.99 0 0 / 0.6)" }} aria-hidden="true" />
+                <Settings className="size-5" style={{ color: "color-mix(in oklch, var(--primary-foreground) 60%, transparent)" }} aria-hidden="true" />
               </Link>
             )}
           </div>
 
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
             {equipo.description && (
-              <p className="text-sm" style={{ color: "oklch(0.99 0 0 / 0.65)" }}>
+              <p className="text-sm" style={{ color: "color-mix(in oklch, var(--primary-foreground) 65%, transparent)" }}>
                 {equipo.description}
               </p>
             )}
@@ -146,9 +148,9 @@ export default async function EquipoPage({
               <span
                 className="rounded-full border px-2.5 py-0.5 text-xs font-medium"
                 style={{
-                  borderColor: "oklch(0.99 0 0 / 0.3)",
-                  background: "oklch(0.99 0 0 / 0.12)",
-                  color: "oklch(0.99 0 0 / 0.9)",
+                  borderColor: "color-mix(in oklch, var(--primary-foreground) 30%, transparent)",
+                  background: "color-mix(in oklch, var(--primary-foreground) 12%, transparent)",
+                  color: "color-mix(in oklch, var(--primary-foreground) 90%, transparent)",
                 }}
               >
                 Capitana
@@ -187,13 +189,13 @@ export default async function EquipoPage({
             <span className="flex items-center gap-1.5">
               <span
                 className="text-lg font-bold tabular-nums sm:text-2xl lg:text-3xl"
-                style={{ color: "oklch(0.52 0.22 285)" }}
+                style={{ color: "var(--primary)" }}
               >
                 {totalGastos > 0 ? formatCurrency(totalGastos) : "—"}
               </span>
               <TrendingUp
                 className="size-4 opacity-0 transition-opacity group-hover:opacity-100"
-                style={{ color: "oklch(0.52 0.22 285)" }}
+                style={{ color: "var(--primary)" }}
                 aria-hidden="true"
               />
             </span>
@@ -205,7 +207,7 @@ export default async function EquipoPage({
           <div className="flex flex-col gap-0.5 px-4 py-4 sm:px-6">
             <span
               className="text-lg font-bold tabular-nums sm:text-2xl lg:text-3xl"
-              style={{ color: "oklch(0.52 0.22 285)" }}
+              style={{ color: "var(--primary)" }}
             >
               {totalGastos > 0 ? formatCurrency(totalGastos) : "—"}
             </span>
@@ -253,7 +255,7 @@ export default async function EquipoPage({
                   {(esLaCapitana || member.isCoCapitana) && (
                     <span
                       className="absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full text-[8px] ring-2 ring-background"
-                      style={{ background: "oklch(0.52 0.22 285)", color: "oklch(0.99 0 0)" }}
+                      style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
                       aria-label={esLaCapitana ? "Capitana" : "Co-capitana"}
                     >
                       ★

@@ -214,21 +214,21 @@ export default async function BalancePage({
         <div
           className="flex flex-col gap-1 rounded-xl border px-5 py-4"
           style={{
-            borderColor: balancePositivo ? "oklch(0.52 0.22 285 / 0.3)" : "oklch(0.65 0.19 22 / 0.3)",
-            background: balancePositivo ? "oklch(0.52 0.22 285 / 0.06)" : "oklch(0.65 0.19 22 / 0.06)",
+            borderColor: balancePositivo ? "color-mix(in oklch, var(--primary) 30%, transparent)" : "oklch(0.65 0.19 22 / 0.3)",
+            background: balancePositivo ? "color-mix(in oklch, var(--primary) 6%, transparent)" : "oklch(0.65 0.19 22 / 0.06)",
           }}
         >
           <div className="flex items-center gap-1.5">
             <Wallet
               className="size-3.5"
-              style={{ color: balancePositivo ? "oklch(0.52 0.22 285)" : "oklch(0.65 0.19 22)" }}
+              style={{ color: balancePositivo ? "var(--primary)" : "oklch(0.65 0.19 22)" }}
               aria-hidden="true"
             />
             <span className="text-xs font-medium text-muted-foreground">Balance neto</span>
           </div>
           <p
             className="mt-1 text-xl font-bold tabular-nums"
-            style={{ color: balancePositivo ? "oklch(0.52 0.22 285)" : "oklch(0.72 0.16 22)" }}
+            style={{ color: balancePositivo ? "var(--primary)" : "oklch(0.72 0.16 22)" }}
           >
             {balance >= 0 ? "+" : ""}{formatCurrency(balance)}
           </p>
