@@ -69,6 +69,22 @@ enum MedioPago {
   TRANSFERENCIA
 }
 
+/// Estado de la suscripción de un equipo (módulo de super administración).
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  SUSPENDED
+  CANCELED
+}
+
+/// Plan contratado por el equipo.
+enum Plan {
+  TRIAL
+  BASIC
+  PRO
+}
+
 // ═════════════════════════════════════════════════════════════════════════════
 // AUTH.JS — Modelos requeridos por @auth/prisma-adapter v2
 // Referencia: https://authjs.dev/getting-started/adapters/prisma
@@ -84,6 +100,10 @@ model User {
   role          UserRole  @default(JUGADORA)
   /// Hash de contraseña (bcrypt). Null para cuentas creadas con Google.
   password      String?
+  /// Acceso al panel de super administración (/admin). Se asigna a mano en la
+  /// base de datos, nunca desde la UI (RF-51). Sin relación con TeamMember/rol
+  /// dentro de un equipo (RNF-13).
+  isSuperAdmin  Boolean   @default(false)
 
   // ── Auth.js relations ──────────────────────────────────────────
   accounts Account[]
@@ -96,6 +116,10 @@ model User {
   teamMemberships   TeamMember[]
   /// Pagos que este usuario confirmó/registró
   confirmedPayments Payment[]    @relation("PaymentConfirmedBy")
+
+  // ── Super administración ───────────────────────────────────────
+  /// Acciones de super admin realizadas por este usuario (si isSuperAdmin)
+  superAdminActions SuperAdminAuditLog[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -179,6 +203,8 @@ model Team {
   members  TeamMember[]
   events   Event[]
   expenses Expense[]
+  /// Relación comercial del equipo con el producto (plan, facturación) — RF-54
+  subscription Subscription?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -321,4 +347,67 @@ model Expense {
   updatedAt DateTime @updatedAt
 
   @@index([teamId])
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// SUPER ADMINISTRACIÓN — módulo SaaS (ver SUPERADMIN.md)
+//
+// Estos modelos son exclusivos de la relación comercial con el equipo-cliente
+// (plan, facturación, auditoría). Ningún código de este módulo debe consultar
+// TeamMember, Event, Payment o Expense — ver RNF-14/RF-57.
+// ═════════════════════════════════════════════════════════════════════════════
+
+// ── Subscription ──────────────────────────────────────────────────────────────
+
+/// Relación comercial de un equipo con el producto. 1:1 con Team — la unidad
+/// de facturación es el equipo, no la cuenta de usuaria (ver SUPERADMIN.md).
+model Subscription {
+  id     String @id @default(cuid())
+  teamId String @unique
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  plan   Plan               @default(TRIAL)
+  status SubscriptionStatus @default(TRIALING)
+
+  trialEndsAt      DateTime?
+  currentPeriodEnd DateTime?
+
+  /// Persona de contacto del equipo (no necesariamente la capitana con cuenta)
+  contactName  String
+  contactEmail String
+  contactPhone String?
+
+  /// Datos de facturación — RNF-18: nunca deben aparecer en logs de aplicación
+  billingName  String?
+  billingTaxId String? // CUIT/CUIL
+  billingEmail String?
+
+  /// Notas internas del super admin sobre este equipo (RF-61)
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ── SuperAdminAuditLog ────────────────────────────────────────────────────────
+
+/// Log de auditoría de acciones del super admin (RF-58). Solo-append desde la
+/// app — RNF-19: ningún endpoint debe exponer un UPDATE ni DELETE sobre esta tabla.
+model SuperAdminAuditLog {
+  id          String @id @default(cuid())
+  adminUserId String
+  admin       User   @relation(fields: [adminUserId], references: [id])
+
+  /// Ej: "SUBSCRIPTION_STATUS_CHANGED", "BILLING_INFO_EDITED"
+  action String
+
+  /// Id del equipo afectado. Sin relación de Prisma a propósito — este log no
+  /// debe poder usarse como puerta de entrada para consultar datos del equipo.
+  targetTeamId String
+
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([adminUserId])
+  @@index([targetTeamId])
 }
