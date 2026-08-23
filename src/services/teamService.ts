@@ -42,6 +42,8 @@ export async function createTeam(
       data: {
         name: input.name.trim(),
         description,
+        primaryColor: input.primaryColor || null,
+        secondaryColor: input.secondaryColor || null,
         ownerId: userId,
         members: {
           create: {
