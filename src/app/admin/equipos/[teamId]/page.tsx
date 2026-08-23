@@ -83,6 +83,7 @@ export default async function AdminEquipoDetailPage({
           <EditSubscriptionInfoForm
             teamId={teamId}
             plan={subscription.plan}
+            priceArs={subscription.priceArs}
             contactName={subscription.contactName}
             contactEmail={subscription.contactEmail}
             contactPhone={subscription.contactPhone}

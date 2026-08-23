@@ -10,9 +10,11 @@ import Link from "next/link"
 import { Building2 } from "lucide-react"
 import {
   getTeamsForAdmin,
+  getAdminMetrics,
   type AdminStatusFilter,
 } from "@/services/superAdminService"
 import { AdminEquiposFilters } from "@/components/admin/AdminEquiposFilters"
+import { AdminMetricsCards } from "@/components/admin/AdminMetricsCards"
 import { SubscriptionStatusBadge, PlanBadge } from "@/components/admin/SubscriptionBadges"
 import {
   Table,
@@ -46,7 +48,10 @@ export default async function AdminEquiposPage({
     ? (rawStatus as AdminStatusFilter)
     : undefined
 
-  const result = await getTeamsForAdmin({ search: q, status })
+  const [result, metricsResult] = await Promise.all([
+    getTeamsForAdmin({ search: q, status }),
+    getAdminMetrics(),
+  ])
   const equipos = result.success ? result.data : []
 
   return (
@@ -57,6 +62,8 @@ export default async function AdminEquiposPage({
           {equipos.length} {equipos.length === 1 ? "equipo registrado" : "equipos registrados"}
         </p>
       </div>
+
+      {metricsResult.success && <AdminMetricsCards metrics={metricsResult.data} />}
 
       <AdminEquiposFilters qActual={q ?? ""} statusActual={status ?? "TODOS"} />
 

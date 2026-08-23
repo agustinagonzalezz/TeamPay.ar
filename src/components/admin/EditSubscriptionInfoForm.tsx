@@ -27,6 +27,7 @@ const PLAN_LABELS: Record<(typeof PLAN_VALUES)[number], string> = {
 interface EditSubscriptionInfoFormProps {
   teamId: string
   plan: (typeof PLAN_VALUES)[number]
+  priceArs: number | null
   contactName: string
   contactEmail: string
   contactPhone: string | null
@@ -39,6 +40,7 @@ interface EditSubscriptionInfoFormProps {
 export function EditSubscriptionInfoForm({
   teamId,
   plan,
+  priceArs,
   contactName,
   contactEmail,
   contactPhone,
@@ -54,6 +56,7 @@ export function EditSubscriptionInfoForm({
     resolver: zodResolver(updateSubscriptionInfoSchema),
     defaultValues: {
       plan,
+      priceArs,
       contactName,
       contactEmail,
       contactPhone: contactPhone ?? "",
@@ -115,30 +118,56 @@ export function EditSubscriptionInfoForm({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5">
-            <FormField
-              control={form.control}
-              name="plan"
-              render={({ field }) => (
-                <FormItem className="max-w-xs">
-                  <FormLabel>Plan</FormLabel>
-                  <FormControl>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {PLAN_VALUES.map((value) => (
-                          <SelectItem key={value} value={value}>
-                            {PLAN_LABELS[value]}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="plan"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Plan</FormLabel>
+                    <FormControl>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PLAN_VALUES.map((value) => (
+                            <SelectItem key={value} value={value}>
+                              {PLAN_LABELS[value]}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="priceArs"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Precio mensual (ARS)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="1"
+                        placeholder="Opcional"
+                        {...field}
+                        value={field.value ?? ""}
+                        onChange={(e) =>
+                          field.onChange(e.target.value === "" ? null : Number(e.target.value))
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="border-t pt-4">
               <h3 className="mb-3 text-sm font-semibold">Contacto</h3>

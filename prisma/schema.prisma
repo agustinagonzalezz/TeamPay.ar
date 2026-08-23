@@ -369,6 +369,12 @@ model Subscription {
   plan   Plan               @default(TRIAL)
   status SubscriptionStatus @default(TRIALING)
 
+  /// Precio mensual en pesos argentinos enteros (sin centavos) — mismo
+  /// criterio que formatCurrency() en el resto de la app. Null = todavía no
+  /// se cargó un precio (ej. cortesía o plan a definir) — RF-59: esos casos
+  /// se muestran aparte, nunca se cuentan como 0 en el MRR.
+  priceArs Int?
+
   trialEndsAt      DateTime?
   currentPeriodEnd DateTime?
 

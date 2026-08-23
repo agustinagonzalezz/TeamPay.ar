@@ -49,6 +49,7 @@ export type AdminTeamDetail = {
     id: string
     plan: Plan
     status: SubscriptionStatus
+    priceArs: number | null
     trialEndsAt: Date | null
     currentPeriodEnd: Date | null
     contactName: string
@@ -60,6 +61,15 @@ export type AdminTeamDetail = {
     notes: string | null
     updatedAt: Date
   } | null
+}
+
+/** Métricas del panel principal (RF-59). */
+export type AdminMetrics = {
+  totalTeams: number
+  byStatus: Record<AdminStatusFilter, number>
+  mrrArs: number
+  /** Equipos ACTIVE sin priceArs cargado — no se cuentan en mrrArs. */
+  activeTeamsMissingPrice: number
 }
 
 // ── getTeamsForAdmin ────────────────────────────────────────────────────────────
@@ -130,6 +140,7 @@ export async function getTeamAdminDetail(teamId: string): Promise<ServiceResult<
             id: true,
             plan: true,
             status: true,
+            priceArs: true,
             trialEndsAt: true,
             currentPeriodEnd: true,
             contactName: true,
@@ -175,6 +186,7 @@ export async function createSubscription(
           teamId,
           plan: input.plan,
           status: input.status,
+          priceArs: input.priceArs ?? null,
           trialEndsAt: parseDateInput(input.trialEndsAt),
           currentPeriodEnd: parseDateInput(input.currentPeriodEnd),
           contactName: input.contactName.trim(),
@@ -207,6 +219,7 @@ export async function createSubscription(
 
 const TRACKED_INFO_FIELDS = [
   "plan",
+  "priceArs",
   "contactName",
   "contactEmail",
   "contactPhone",
@@ -234,6 +247,7 @@ export async function updateSubscriptionInfo(
 
     const normalized = {
       plan: input.plan,
+      priceArs: input.priceArs ?? null,
       contactName: input.contactName.trim(),
       contactEmail: input.contactEmail.trim(),
       contactPhone: input.contactPhone || null,
@@ -335,6 +349,53 @@ export async function changeSubscriptionStatus(
   } catch (error) {
     console.error("[superAdminService.changeSubscriptionStatus]", error)
     return { success: false, error: "No se pudo actualizar el estado de la suscripción." }
+  }
+}
+
+// ── getAdminMetrics ─────────────────────────────────────────────────────────────
+
+/**
+ * Métricas del panel principal (RF-59): total de equipos, desglose por
+ * estado de suscripción y MRR estimado. Solo Team + Subscription (RNF-14) —
+ * groupBy/aggregate en vez de traer filas y contar en JS.
+ */
+export async function getAdminMetrics(): Promise<ServiceResult<AdminMetrics>> {
+  try {
+    const [totalTeams, statusGroups, sinConfigurar, mrrAgg, activeTeamsMissingPrice] = await Promise.all([
+      prisma.team.count(),
+      prisma.subscription.groupBy({ by: ["status"], _count: { _all: true } }),
+      prisma.team.count({ where: { subscription: null } }),
+      prisma.subscription.aggregate({
+        where: { status: "ACTIVE", priceArs: { not: null } },
+        _sum: { priceArs: true },
+      }),
+      prisma.subscription.count({ where: { status: "ACTIVE", priceArs: null } }),
+    ])
+
+    const byStatus: Record<AdminStatusFilter, number> = {
+      TRIALING: 0,
+      ACTIVE: 0,
+      PAST_DUE: 0,
+      SUSPENDED: 0,
+      CANCELED: 0,
+      SIN_CONFIGURAR: sinConfigurar,
+    }
+    for (const group of statusGroups) {
+      byStatus[group.status] = group._count._all
+    }
+
+    return {
+      success: true,
+      data: {
+        totalTeams,
+        byStatus,
+        mrrArs: mrrAgg._sum.priceArs ?? 0,
+        activeTeamsMissingPrice,
+      },
+    }
+  } catch (error) {
+    console.error("[superAdminService.getAdminMetrics]", error)
+    return { success: false, error: "No se pudieron cargar las métricas." }
   }
 }
 

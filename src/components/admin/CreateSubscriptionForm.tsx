@@ -48,6 +48,7 @@ export function CreateSubscriptionForm({ teamId }: CreateSubscriptionFormProps) 
       status: "TRIALING",
       trialEndsAt: "",
       currentPeriodEnd: "",
+      priceArs: null,
       contactName: "",
       contactEmail: "",
       contactPhone: "",
@@ -182,6 +183,30 @@ export function CreateSubscriptionForm({ teamId }: CreateSubscriptionFormProps) 
                     <FormLabel>Fin del período actual</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="priceArs"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Precio mensual (ARS)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="1"
+                        placeholder="Opcional"
+                        {...field}
+                        value={field.value ?? ""}
+                        onChange={(e) =>
+                          field.onChange(e.target.value === "" ? null : Number(e.target.value))
+                        }
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

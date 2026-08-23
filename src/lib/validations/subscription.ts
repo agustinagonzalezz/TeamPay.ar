@@ -14,6 +14,13 @@ export const SUBSCRIPTION_STATUS_VALUES = [
   "CANCELED",
 ] as const
 
+const priceArsSchema = z
+  .number({ error: "Ingresá un número válido" })
+  .int("El precio debe ser un número entero")
+  .nonnegative("El precio no puede ser negativo")
+  .nullable()
+  .optional()
+
 const contactBillingFields = {
   contactName: z
     .string()
@@ -48,6 +55,7 @@ export const createSubscriptionSchema = z.object({
   status: z.enum(SUBSCRIPTION_STATUS_VALUES),
   trialEndsAt: z.string().trim().optional().or(z.literal("")), // "YYYY-MM-DD"
   currentPeriodEnd: z.string().trim().optional().or(z.literal("")),
+  priceArs: priceArsSchema,
   ...contactBillingFields,
 })
 
@@ -57,6 +65,7 @@ export type CreateSubscriptionInput = z.infer<typeof createSubscriptionSchema>
 
 export const updateSubscriptionInfoSchema = z.object({
   plan: z.enum(PLAN_VALUES),
+  priceArs: priceArsSchema,
   ...contactBillingFields,
 })
 
