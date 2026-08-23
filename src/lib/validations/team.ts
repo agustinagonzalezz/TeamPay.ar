@@ -9,6 +9,12 @@
 
 import { z } from "zod"
 
+const hexColorSchema = z
+  .string()
+  .regex(/^#[0-9A-Fa-f]{6}$/, "Tiene que ser un color hex válido (ej: #dc2626)")
+  .optional()
+  .or(z.literal(""))
+
 // ── createTeamSchema ──────────────────────────────────────────────────────────
 
 export const createTeamSchema = z.object({
@@ -30,6 +36,9 @@ export const createTeamSchema = z.object({
     .url("URL inválida")
     .optional()
     .or(z.literal("")),
+
+  primaryColor: hexColorSchema,
+  secondaryColor: hexColorSchema,
 })
 
 export type CreateTeamInput = z.infer<typeof createTeamSchema>

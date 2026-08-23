@@ -24,6 +24,8 @@ export default async function EditarEquipoPage({
       nombre={equipo.name}
       descripcion={equipo.description ?? ""}
       logoUrl={equipo.logoUrl ?? null}
+      primaryColor={equipo.primaryColor ?? null}
+      secondaryColor={equipo.secondaryColor ?? null}
     />
   )
 }

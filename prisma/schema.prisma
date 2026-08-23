@@ -169,6 +169,10 @@ model Team {
   name        String
   description String?
   logoUrl     String?
+  /// Colores propios del equipo (hex, ej: "#dc2626") que sobrescriben el tema
+  /// violeta default solo dentro de las páginas de este equipo. Null = sin override.
+  primaryColor   String?
+  secondaryColor String?
   ownerId     String
 
   owner    User         @relation("TeamOwner", fields: [ownerId], references: [id])

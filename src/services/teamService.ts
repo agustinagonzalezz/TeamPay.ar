@@ -175,6 +175,8 @@ export async function updateTeam(
         ...(input.name && { name: input.name.trim() }),
         description: input.description?.trim() || null,
         ...(input.logoUrl !== undefined && { logoUrl: input.logoUrl || null }),
+        ...(input.primaryColor !== undefined && { primaryColor: input.primaryColor || null }),
+        ...(input.secondaryColor !== undefined && { secondaryColor: input.secondaryColor || null }),
       },
     })
     return { success: true, data: updated }
