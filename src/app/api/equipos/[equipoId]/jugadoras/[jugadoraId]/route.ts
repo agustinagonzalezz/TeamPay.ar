@@ -50,7 +50,12 @@ export async function DELETE(_req: Request, { params }: RouteParams) {
   const result = await removeJugadora(jugadoraId, equipoId, user.id)
 
   if (!result.success) {
-    const status = result.error.includes("capitana") || result.error.includes("podés") ? 403 : 500
+    const status =
+      result.code === "NOT_CAPITANA" ||
+      result.code === "SELF_ACTION_FORBIDDEN" ||
+      result.code === "SUBSCRIPTION_SUSPENDED"
+        ? 403
+        : 500
     return NextResponse.json({ success: false, error: result.error }, { status })
   }
 

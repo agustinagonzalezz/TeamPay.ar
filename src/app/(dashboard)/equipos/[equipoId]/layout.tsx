@@ -10,8 +10,9 @@
 import type { CSSProperties } from "react"
 import { notFound, redirect } from "next/navigation"
 import { getCurrentUser } from "@/lib/auth"
-import { getTeamById } from "@/services/teamService"
+import { getTeamById, getTeamSubscriptionStatus } from "@/services/teamService"
 import { getContrastForeground } from "@/lib/color"
+import { SuspendedBanner } from "@/components/shared/SuspendedBanner"
 
 export default async function EquipoLayout({
   children,
@@ -30,8 +31,21 @@ export default async function EquipoLayout({
 
   const { primaryColor, secondaryColor } = teamResult.data
 
+  // RF-56b: leído fresco en cada request, igual que isSuperAdmin — al
+  // reactivarse (RF-56c) el banner desaparece sin que nadie tenga que
+  // volver a loguearse.
+  const subscriptionStatus = await getTeamSubscriptionStatus(equipoId)
+  const isSuspended = subscriptionStatus === "SUSPENDED"
+
+  const content = (
+    <>
+      {isSuspended && <SuspendedBanner />}
+      {children}
+    </>
+  )
+
   if (!primaryColor && !secondaryColor) {
-    return <>{children}</>
+    return content
   }
 
   const themeVars = {
@@ -48,7 +62,7 @@ export default async function EquipoLayout({
 
   return (
     <div className="contents" style={themeVars}>
-      {children}
+      {content}
     </div>
   )
 }

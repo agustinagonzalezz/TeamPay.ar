@@ -11,7 +11,7 @@ import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
 import { getCurrentUser } from "@/lib/auth"
-import { getTeamById } from "@/services/teamService"
+import { getTeamById, getTeamSubscriptionStatus } from "@/services/teamService"
 import {
   getJugadorasByTeam,
   type JugadorasEstado,
@@ -58,6 +58,10 @@ export default async function JugadorasPage({
   const esCapitana = equipo.ownerId === user.id
   const esCapitanaPrincipal = equipo.ownerId === user.id  // solo el owner puede gestionar co-capitanas
 
+  // RF-56: en modo solo-lectura no se muestran los controles de crear/editar/eliminar
+  const subscriptionStatus = await getTeamSubscriptionStatus(equipoId)
+  const puedeEscribir = subscriptionStatus !== "SUSPENDED"
+
   // Obtener jugadoras
   const jugadorasResult = await getJugadorasByTeam(equipoId, user.id, { search: q, orden, estado })
   if (!jugadorasResult.success) notFound()
@@ -87,7 +91,7 @@ export default async function JugadorasPage({
       </div>
 
       {/* ── Formulario para agregar (solo capitana) ─────────────────────── */}
-      {esCapitana && <AddJugadoraForm equipoId={equipoId} />}
+      {esCapitana && puedeEscribir && <AddJugadoraForm equipoId={equipoId} />}
 
       {/* ── Link de invitación (solo capitana) ──────────────────────────── */}
       {esCapitana && (
@@ -141,7 +145,7 @@ export default async function JugadorasPage({
                           </span>
                         )}
                         <span className="text-sm font-medium">{jugadora.name}</span>
-                        {esCapitana && (
+                        {esCapitana && puedeEscribir && (
                           <EditJugadoraButton
                             equipoId={equipoId}
                             jugadoraId={jugadora.id}
@@ -179,7 +183,7 @@ export default async function JugadorasPage({
 
                     <div className="flex items-center gap-1.5">
                       {/* Botón co-capitana: solo capitana principal, sobre miembros con cuenta */}
-                      {esCapitanaPrincipal && !esLaCapitana && jugadora.userId && (
+                      {esCapitanaPrincipal && puedeEscribir && !esLaCapitana && jugadora.userId && (
                         <CoCapitanaButton
                           equipoId={equipoId}
                           jugadoraId={jugadora.id}
@@ -188,7 +192,7 @@ export default async function JugadorasPage({
                         />
                       )}
                       {/* Botón de baja: solo capitana, no sobre sí misma, no si ya está inactiva */}
-                      {esCapitana && !esLaCapitana && jugadora.status === "ACTIVA" && (
+                      {esCapitana && puedeEscribir && !esLaCapitana && jugadora.status === "ACTIVA" && (
                         <RemoveJugadoraButton
                           equipoId={equipoId}
                           jugadoraId={jugadora.id}

@@ -10,7 +10,7 @@ import { notFound, redirect } from "next/navigation"
 import { ArrowLeft, Receipt } from "lucide-react"
 import { getCurrentUser } from "@/lib/auth"
 import { getGastosByTeam } from "@/services/gastoService"
-import { getTeamById } from "@/services/teamService"
+import { getTeamById, getTeamSubscriptionStatus } from "@/services/teamService"
 import { GastoForm } from "@/components/gastos/GastoForm"
 import { DeleteGastoButton } from "@/components/gastos/DeleteGastoButton"
 import { EditGastoButton } from "@/components/gastos/EditGastoButton"
@@ -32,9 +32,10 @@ export default async function GastosPage({
   const user = await getCurrentUser()
   if (!user) redirect("/login")
 
-  const [teamResult, gastosResult] = await Promise.all([
+  const [teamResult, gastosResult, subscriptionStatus] = await Promise.all([
     getTeamById(equipoId, user.id),
     getGastosByTeam(equipoId, user.id),
+    getTeamSubscriptionStatus(equipoId),
   ])
 
   if (!teamResult.success) notFound()
@@ -42,6 +43,8 @@ export default async function GastosPage({
   const equipo = teamResult.data
   const esCapitana = equipo.ownerId === user.id
   const gastos = gastosResult.success ? gastosResult.data : []
+  // RF-56: en modo solo-lectura no se muestran los controles de crear/editar/eliminar
+  const puedeEscribir = subscriptionStatus !== "SUSPENDED"
 
   const totalGastos = gastos.reduce((acc, g) => acc + Number(g.amount), 0)
 
@@ -75,7 +78,7 @@ export default async function GastosPage({
       </div>
 
       {/* ── Formulario (solo capitana) ─────────────────────────────────── */}
-      {esCapitana && (
+      {esCapitana && puedeEscribir && (
         <section aria-labelledby="nuevo-gasto-heading">
           <h2 id="nuevo-gasto-heading" className="mb-4 text-lg font-semibold">
             Registrar gasto
@@ -103,7 +106,7 @@ export default async function GastosPage({
             <p className="text-sm font-medium text-muted-foreground">
               Todavía no hay gastos registrados.
             </p>
-            {esCapitana && (
+            {esCapitana && puedeEscribir && (
               <p className="mt-1 text-xs text-muted-foreground">
                 Usá el formulario de arriba para agregar el primero.
               </p>
@@ -140,7 +143,7 @@ export default async function GastosPage({
                     <span className="text-sm font-semibold tabular-nums">
                       {formatCurrency(Number(gasto.amount))}
                     </span>
-                    {esCapitana && (
+                    {esCapitana && puedeEscribir && (
                       <>
                         <EditGastoButton
                           equipoId={equipoId}

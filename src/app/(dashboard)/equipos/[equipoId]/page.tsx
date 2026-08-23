@@ -4,7 +4,7 @@ import Image from "next/image"
 import { notFound, redirect } from "next/navigation"
 import { ArrowLeft, Plus, TrendingUp, Settings } from "lucide-react"
 import { getCurrentUser } from "@/lib/auth"
-import { getTeamDetails } from "@/services/teamService"
+import { getTeamDetails, getTeamSubscriptionStatus } from "@/services/teamService"
 import { getEventosByTeam, checkIsCapitana } from "@/services/eventoService"
 import { getGastosByTeam } from "@/services/gastoService"
 import { EventoCard } from "@/components/eventos/EventoCard"
@@ -51,11 +51,12 @@ export default async function EquipoPage({
   const user = await getCurrentUser()
   if (!user) redirect("/login")
 
-  const [teamResult, eventosResult, gastosResult, esCapitana] = await Promise.all([
+  const [teamResult, eventosResult, gastosResult, esCapitana, subscriptionStatus] = await Promise.all([
     getTeamDetails(equipoId, user.id),
     getEventosByTeam(equipoId, user.id),
     getGastosByTeam(equipoId, user.id),
     checkIsCapitana(equipoId, user.id),
+    getTeamSubscriptionStatus(equipoId),
   ])
 
   if (!teamResult.success) notFound()
@@ -64,6 +65,8 @@ export default async function EquipoPage({
   const eventos = eventosResult.success ? eventosResult.data : []
   const gastos = gastosResult.success ? gastosResult.data : []
   const totalGastos = gastos.reduce((acc, g) => acc + Number(g.amount), 0)
+  // RF-56: en modo solo-lectura no se muestran los accesos directos a crear/editar
+  const puedeEscribir = subscriptionStatus !== "SUSPENDED"
 
   const AVATARS_VISIBLE = 9
 
@@ -282,7 +285,7 @@ export default async function EquipoPage({
           <h2 id="eventos-heading" className="text-base font-semibold tracking-tight">
             Eventos
           </h2>
-          {esCapitana && (
+          {esCapitana && puedeEscribir && (
             <Link
               href={`/equipos/${equipoId}/eventos/nuevo`}
               className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
@@ -324,7 +327,7 @@ export default async function EquipoPage({
             href={`/equipos/${equipoId}/gastos`}
             className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
           >
-            {esCapitana ? (
+            {esCapitana && puedeEscribir ? (
               <><Plus className="size-4" aria-hidden="true" />Agregar</>
             ) : (
               "Ver gastos"

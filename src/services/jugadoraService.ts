@@ -9,10 +9,12 @@ import { prisma } from "@/lib/prisma"
 import type { AddJugadoraInput, UpdateJugadoraInput } from "@/lib/validations/jugadora"
 import type { TeamMember } from "@/generated/prisma/client"
 import { Prisma } from "@/generated/prisma/client"
+import { requireTeamWriteAccess, SUBSCRIPTION_SUSPENDED_MESSAGE } from "@/lib/auth/team-access"
+import type { ServiceErrorCode } from "@/types/service-result"
 
 type ServiceResult<T> =
   | { success: true; data: T }
-  | { success: false; error: string }
+  | { success: false; error: string; code?: ServiceErrorCode }
 
 export type JugadorasOrden = "nombre_asc" | "nombre_desc" | "camiseta" | "posicion"
 export type JugadorasEstado = "ACTIVA" | "INACTIVA" | "TODAS"
@@ -104,7 +106,12 @@ export async function addJugadora(
 ): Promise<ServiceResult<TeamMember>> {
   try {
     if (!(await isCapitana(teamId, userId))) {
-      return { success: false, error: "Solo la capitana puede agregar jugadoras." }
+      return { success: false, error: "Solo la capitana puede agregar jugadoras.", code: "NOT_CAPITANA" }
+    }
+
+    const writeAccess = await requireTeamWriteAccess(teamId)
+    if (!writeAccess.authorized) {
+      return { success: false, error: SUBSCRIPTION_SUSPENDED_MESSAGE, code: writeAccess.reason }
     }
 
     const jugadora = await prisma.teamMember.create({
@@ -270,6 +277,11 @@ export async function setCoCapitana(
     const team = await prisma.team.findFirst({ where: { id: teamId, ownerId: userId } })
     if (!team) return { success: false, error: "Solo la capitana principal puede gestionar co-capitanas." }
 
+    const writeAccess = await requireTeamWriteAccess(teamId)
+    if (!writeAccess.authorized) {
+      return { success: false, error: SUBSCRIPTION_SUSPENDED_MESSAGE, code: writeAccess.reason }
+    }
+
     const member = await prisma.teamMember.findFirst({
       where: { id: memberId, teamId, status: "ACTIVA" },
     })
@@ -306,8 +318,14 @@ export async function updateJugadora(
 ): Promise<ServiceResult<TeamMember>> {
   try {
     if (!(await isCapitana(teamId, userId))) {
-      return { success: false, error: "Solo la capitana puede editar jugadoras." }
+      return { success: false, error: "Solo la capitana puede editar jugadoras.", code: "NOT_CAPITANA" }
     }
+
+    const writeAccess = await requireTeamWriteAccess(teamId)
+    if (!writeAccess.authorized) {
+      return { success: false, error: SUBSCRIPTION_SUSPENDED_MESSAGE, code: writeAccess.reason }
+    }
+
     const member = await prisma.teamMember.findFirst({ where: { id: jugadoraId, teamId } })
     if (!member) return { success: false, error: "Jugadora no encontrada." }
 
@@ -336,7 +354,12 @@ export async function removeJugadora(
 ): Promise<ServiceResult<TeamMember>> {
   try {
     if (!(await isCapitana(teamId, userId))) {
-      return { success: false, error: "Solo la capitana puede dar de baja jugadoras." }
+      return { success: false, error: "Solo la capitana puede dar de baja jugadoras.", code: "NOT_CAPITANA" }
+    }
+
+    const writeAccess = await requireTeamWriteAccess(teamId)
+    if (!writeAccess.authorized) {
+      return { success: false, error: SUBSCRIPTION_SUSPENDED_MESSAGE, code: writeAccess.reason }
     }
 
     // No permitir que la capitana se dé de baja a sí misma
@@ -350,7 +373,11 @@ export async function removeJugadora(
     }
 
     if (jugadora.userId === userId) {
-      return { success: false, error: "No podés darte de baja del equipo que administrás." }
+      return {
+        success: false,
+        error: "No podés darte de baja del equipo que administrás.",
+        code: "SELF_ACTION_FORBIDDEN",
+      }
     }
 
     const updated = await prisma.teamMember.update({

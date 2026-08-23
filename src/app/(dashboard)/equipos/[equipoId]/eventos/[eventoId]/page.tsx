@@ -11,6 +11,7 @@ import { notFound, redirect } from "next/navigation"
 import { ArrowLeft, Copy, Pencil } from "lucide-react"
 import { getCurrentUser } from "@/lib/auth"
 import { getEventoById, checkIsCapitana } from "@/services/eventoService"
+import { getTeamSubscriptionStatus } from "@/services/teamService"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { buttonVariants } from "@/components/ui/button"
 import { ParticipantRow } from "@/components/eventos/ParticipantRow"
@@ -32,14 +33,17 @@ export default async function EventoPage({
   const user = await getCurrentUser()
   if (!user) redirect("/login")
 
-  const [result, isCapitana] = await Promise.all([
+  const [result, isCapitana, subscriptionStatus] = await Promise.all([
     getEventoById(eventoId, equipoId, user.id),
     checkIsCapitana(equipoId, user.id),
+    getTeamSubscriptionStatus(equipoId),
   ])
 
   if (!result.success) notFound()
 
   const evento = result.data
+  // RF-56: en modo solo-lectura no se muestran los controles de crear/editar/eliminar
+  const puedeEscribir = subscriptionStatus !== "SUSPENDED"
 
   // Estadísticas de pagos
   const total = evento.participants.length
@@ -131,16 +135,18 @@ export default async function EventoPage({
           </div>
           {isCapitana && (
             <div className="flex shrink-0 flex-wrap gap-2">
-              {!isClosed && (
+              {!isClosed && puedeEscribir && (
                 <CerrarEventoButton equipoId={equipoId} eventoId={eventoId} eventoName={evento.name} />
               )}
-              <Link
-                href={`/equipos/${equipoId}/eventos/${eventoId}/editar`}
-                className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-              >
-                <Pencil className="size-4" aria-hidden="true" />
-                Editar
-              </Link>
+              {puedeEscribir && (
+                <Link
+                  href={`/equipos/${equipoId}/eventos/${eventoId}/editar`}
+                  className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+                >
+                  <Pencil className="size-4" aria-hidden="true" />
+                  Editar
+                </Link>
+              )}
               <Link
                 href={`/equipos/${equipoId}/eventos/nuevo?duplicar=${eventoId}`}
                 className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
@@ -231,7 +237,7 @@ export default async function EventoPage({
                   }}
                   equipoId={equipoId}
                   eventoId={eventoId}
-                  isCapitana={isCapitana}
+                  isCapitana={isCapitana && puedeEscribir}
                   amountPerPlayer={Number(evento.amountPerPlayer)}
                   isClosed={isClosed}
                 />

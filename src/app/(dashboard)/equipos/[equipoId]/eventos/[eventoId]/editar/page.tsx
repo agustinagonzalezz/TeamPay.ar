@@ -2,6 +2,7 @@ import { redirect, notFound } from "next/navigation"
 import { getCurrentUser } from "@/lib/auth"
 import { getEventoById, checkIsCapitana } from "@/services/eventoService"
 import { getJugadorasByTeam } from "@/services/jugadoraService"
+import { getTeamSubscriptionStatus } from "@/services/teamService"
 import { EditarEventoForm } from "@/components/eventos/EditarEventoForm"
 
 export default async function EditarEventoPage({
@@ -13,13 +14,16 @@ export default async function EditarEventoPage({
   const user = await getCurrentUser()
   if (!user) redirect("/login")
 
-  const [isCapitana, eventoResult, jugadorasResult] = await Promise.all([
+  const [isCapitana, eventoResult, jugadorasResult, subscriptionStatus] = await Promise.all([
     checkIsCapitana(equipoId, user.id),
     getEventoById(eventoId, equipoId, user.id),
     getJugadorasByTeam(equipoId, user.id),
+    getTeamSubscriptionStatus(equipoId),
   ])
 
   if (!isCapitana) redirect(`/equipos/${equipoId}`)
+  // RF-56: bloquear el acceso directo al formulario si la cuenta está suspendida
+  if (subscriptionStatus === "SUSPENDED") redirect(`/equipos/${equipoId}/eventos/${eventoId}`)
   if (!eventoResult.success) notFound()
 
   const evento = eventoResult.data

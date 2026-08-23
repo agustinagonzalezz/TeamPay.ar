@@ -1,8 +1,12 @@
+import Link from "next/link"
 import { redirect } from "next/navigation"
 import { getCurrentUser } from "@/lib/auth"
 import { getJugadorasByTeam } from "@/services/jugadoraService"
 import { getEventoForDuplication } from "@/services/eventoService"
+import { getTeamSubscriptionStatus } from "@/services/teamService"
 import { NuevoEventoForm } from "@/components/eventos/NuevoEventoForm"
+import { buttonVariants } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import type { CreateEventoInput } from "@/lib/validations/evento"
 
 /** Suma un mes a una fecha sin overflow (ej: 31 ene → 28/29 feb). */
@@ -26,6 +30,24 @@ export default async function NuevoEventoPage({
 
   const user = await getCurrentUser()
   if (!user) redirect("/login")
+
+  // RF-56: bloquear el acceso directo al formulario si la cuenta está suspendida
+  const subscriptionStatus = await getTeamSubscriptionStatus(equipoId)
+  if (subscriptionStatus === "SUSPENDED") {
+    return (
+      <div className="rounded-xl border border-dashed py-12 text-center">
+        <p className="text-sm text-muted-foreground">
+          Esta cuenta está suspendida — no se pueden crear eventos hasta regularizar el pago.
+        </p>
+        <Link
+          href={`/equipos/${equipoId}`}
+          className={cn(buttonVariants({ variant: "outline", size: "sm" }), "mt-4")}
+        >
+          Volver al equipo
+        </Link>
+      </div>
+    )
+  }
 
   const jugadorasResult = await getJugadorasByTeam(equipoId, user.id)
   const playerCount = jugadorasResult.success ? jugadorasResult.data.length : 0

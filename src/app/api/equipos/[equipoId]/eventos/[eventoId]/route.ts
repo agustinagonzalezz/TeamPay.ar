@@ -31,6 +31,6 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
 
   const { equipoId, eventoId } = await params
   const result = await deleteEvento(eventoId, equipoId, user.id)
-  if (!result.success) return NextResponse.json(result, { status: result.error.includes("pagos") ? 409 : 403 })
+  if (!result.success) return NextResponse.json(result, { status: result.code === "CONFLICT" ? 409 : 403 })
   return NextResponse.json(result)
 }

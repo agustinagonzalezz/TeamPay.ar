@@ -7,14 +7,16 @@
  */
 
 import { prisma } from "@/lib/prisma"
+import { requireTeamWriteAccess, SUBSCRIPTION_SUSPENDED_MESSAGE } from "@/lib/auth/team-access"
 import type { CreateGastoInput } from "@/lib/validations/gasto"
 import type { Expense } from "@/generated/prisma/client"
+import type { ServiceErrorCode } from "@/types/service-result"
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
 type ServiceResult<T> =
   | { success: true; data: T }
-  | { success: false; error: string }
+  | { success: false; error: string; code?: ServiceErrorCode }
 
 // ── isCapitana ────────────────────────────────────────────────────────────────
 
@@ -39,7 +41,12 @@ export async function createGasto(
 ): Promise<ServiceResult<Expense>> {
   try {
     if (!(await isCapitana(teamId, userId))) {
-      return { success: false, error: "Solo la capitana puede registrar gastos." }
+      return { success: false, error: "Solo la capitana puede registrar gastos.", code: "NOT_CAPITANA" }
+    }
+
+    const writeAccess = await requireTeamWriteAccess(teamId)
+    if (!writeAccess.authorized) {
+      return { success: false, error: SUBSCRIPTION_SUSPENDED_MESSAGE, code: writeAccess.reason }
     }
 
     const gasto = await prisma.expense.create({
@@ -101,8 +108,14 @@ export async function updateGasto(
 ): Promise<ServiceResult<Expense>> {
   try {
     if (!(await isCapitana(teamId, userId))) {
-      return { success: false, error: "Solo la capitana puede editar gastos." }
+      return { success: false, error: "Solo la capitana puede editar gastos.", code: "NOT_CAPITANA" }
     }
+
+    const writeAccess = await requireTeamWriteAccess(teamId)
+    if (!writeAccess.authorized) {
+      return { success: false, error: SUBSCRIPTION_SUSPENDED_MESSAGE, code: writeAccess.reason }
+    }
+
     const gasto = await prisma.expense.findFirst({ where: { id: gastoId, teamId } })
     if (!gasto) return { success: false, error: "Gasto no encontrado." }
 
@@ -136,7 +149,12 @@ export async function deleteGasto(
 ): Promise<ServiceResult<{ id: string }>> {
   try {
     if (!(await isCapitana(teamId, userId))) {
-      return { success: false, error: "Solo la capitana puede eliminar gastos." }
+      return { success: false, error: "Solo la capitana puede eliminar gastos.", code: "NOT_CAPITANA" }
+    }
+
+    const writeAccess = await requireTeamWriteAccess(teamId)
+    if (!writeAccess.authorized) {
+      return { success: false, error: SUBSCRIPTION_SUSPENDED_MESSAGE, code: writeAccess.reason }
     }
 
     // Verificar que el gasto pertenece al equipo

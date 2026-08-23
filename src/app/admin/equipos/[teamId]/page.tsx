@@ -9,7 +9,8 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, TriangleAlert } from "lucide-react"
+import { requireSuperAdmin } from "@/lib/auth/super-admin"
 import { getTeamAdminDetail } from "@/services/superAdminService"
 import { CreateSubscriptionForm } from "@/components/admin/CreateSubscriptionForm"
 import { EditSubscriptionInfoForm } from "@/components/admin/EditSubscriptionInfoForm"
@@ -27,11 +28,14 @@ export default async function AdminEquipoDetailPage({
 }) {
   const { teamId } = await params
 
+  const admin = await requireSuperAdmin()
+
   const result = await getTeamAdminDetail(teamId)
   if (!result.success) notFound()
 
   const equipo = result.data
   const { subscription } = equipo
+  const esPropioEquipo = equipo.owner.id === admin.id
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-8">
@@ -51,6 +55,19 @@ export default async function AdminEquipoDetailPage({
           Alta {formatDate(equipo.createdAt)} · Capitana: {equipo.owner.name ?? equipo.owner.email} ({equipo.owner.email})
         </p>
       </div>
+
+      {esPropioEquipo && (
+        <div
+          role="alert"
+          className="flex items-start gap-3 rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-700/40 dark:bg-amber-900/20 dark:text-amber-400"
+        >
+          <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+          <p>
+            Este es tu propio equipo — suspenderlo (o crear la suscripción ya como suspendida) también
+            te va a dejar en modo solo-lectura a vos como capitana.
+          </p>
+        </div>
+      )}
 
       {!subscription ? (
         <div className="flex flex-col gap-4">

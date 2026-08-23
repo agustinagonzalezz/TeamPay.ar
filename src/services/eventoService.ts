@@ -6,6 +6,8 @@
  */
 
 import { prisma } from "@/lib/prisma"
+import { requireTeamWriteAccess, SUBSCRIPTION_SUSPENDED_MESSAGE } from "@/lib/auth/team-access"
+import type { ServiceErrorCode } from "@/types/service-result"
 import type { CreateEventoInput, UpdateEventoInput } from "@/lib/validations/evento"
 import type {
   Event,
@@ -21,7 +23,7 @@ import type {
 
 type ServiceResult<T> =
   | { success: true; data: T }
-  | { success: false; error: string }
+  | { success: false; error: string; code?: ServiceErrorCode }
 
 export type EventoListItem = Event & {
   participants: Pick<EventParticipant, "status">[]
@@ -68,7 +70,12 @@ export async function createEvento(
 ): Promise<ServiceResult<Event>> {
   try {
     if (!(await isCapitana(teamId, userId))) {
-      return { success: false, error: "Solo la capitana puede crear eventos." }
+      return { success: false, error: "Solo la capitana puede crear eventos.", code: "NOT_CAPITANA" }
+    }
+
+    const writeAccess = await requireTeamWriteAccess(teamId)
+    if (!writeAccess.authorized) {
+      return { success: false, error: SUBSCRIPTION_SUSPENDED_MESSAGE, code: writeAccess.reason }
     }
 
     // Obtener jugadoras activas para generar los participantes
@@ -225,7 +232,12 @@ export async function updateEvento(
 ): Promise<ServiceResult<Event>> {
   try {
     if (!(await isCapitana(teamId, userId))) {
-      return { success: false, error: "Solo la capitana puede editar eventos." }
+      return { success: false, error: "Solo la capitana puede editar eventos.", code: "NOT_CAPITANA" }
+    }
+
+    const writeAccess = await requireTeamWriteAccess(teamId)
+    if (!writeAccess.authorized) {
+      return { success: false, error: SUBSCRIPTION_SUSPENDED_MESSAGE, code: writeAccess.reason }
     }
 
     const evento = await prisma.event.findFirst({ where: { id: eventoId, teamId } })
@@ -280,7 +292,12 @@ export async function deleteEvento(
 ): Promise<ServiceResult<null>> {
   try {
     if (!(await isCapitana(teamId, userId))) {
-      return { success: false, error: "Solo la capitana puede eliminar eventos." }
+      return { success: false, error: "Solo la capitana puede eliminar eventos.", code: "NOT_CAPITANA" }
+    }
+
+    const writeAccess = await requireTeamWriteAccess(teamId)
+    if (!writeAccess.authorized) {
+      return { success: false, error: SUBSCRIPTION_SUSPENDED_MESSAGE, code: writeAccess.reason }
     }
 
     const evento = await prisma.event.findFirst({ where: { id: eventoId, teamId } })
@@ -291,7 +308,11 @@ export async function deleteEvento(
       where: { eventParticipant: { eventId: eventoId } },
     })
     if (paymentCount > 0) {
-      return { success: false, error: "No se puede eliminar un evento con pagos registrados." }
+      return {
+        success: false,
+        error: "No se puede eliminar un evento con pagos registrados.",
+        code: "CONFLICT",
+      }
     }
 
     await prisma.event.delete({ where: { id: eventoId } })
@@ -380,7 +401,12 @@ export async function updateParticipantStatus(
 ): Promise<ServiceResult<EventParticipant>> {
   try {
     if (!(await isCapitana(teamId, userId))) {
-      return { success: false, error: "Solo la capitana puede registrar pagos." }
+      return { success: false, error: "Solo la capitana puede registrar pagos.", code: "NOT_CAPITANA" }
+    }
+
+    const writeAccess = await requireTeamWriteAccess(teamId)
+    if (!writeAccess.authorized) {
+      return { success: false, error: SUBSCRIPTION_SUSPENDED_MESSAGE, code: writeAccess.reason }
     }
 
     const participant = await prisma.eventParticipant.findUnique({
@@ -452,7 +478,12 @@ export async function updateParticipantCustomAmount(
 ): Promise<ServiceResult<EventParticipant>> {
   try {
     if (!(await isCapitana(teamId, userId))) {
-      return { success: false, error: "Solo la capitana puede modificar montos." }
+      return { success: false, error: "Solo la capitana puede modificar montos.", code: "NOT_CAPITANA" }
+    }
+
+    const writeAccess = await requireTeamWriteAccess(teamId)
+    if (!writeAccess.authorized) {
+      return { success: false, error: SUBSCRIPTION_SUSPENDED_MESSAGE, code: writeAccess.reason }
     }
 
     const participant = await prisma.eventParticipant.findUnique({
@@ -489,7 +520,12 @@ export async function closeEvento(
 ): Promise<ServiceResult<Event>> {
   try {
     if (!(await isCapitana(teamId, userId))) {
-      return { success: false, error: "Solo la capitana puede cerrar eventos." }
+      return { success: false, error: "Solo la capitana puede cerrar eventos.", code: "NOT_CAPITANA" }
+    }
+
+    const writeAccess = await requireTeamWriteAccess(teamId)
+    if (!writeAccess.authorized) {
+      return { success: false, error: SUBSCRIPTION_SUSPENDED_MESSAGE, code: writeAccess.reason }
     }
 
     const evento = await prisma.event.findFirst({ where: { id: eventoId, teamId } })

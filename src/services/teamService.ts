@@ -4,7 +4,7 @@
 
 import { prisma } from "@/lib/prisma"
 import type { CreateTeamInput, UpdateTeamInput } from "@/lib/validations/team"
-import type { Team, TeamMember } from "@/generated/prisma/client"
+import type { Team, TeamMember, SubscriptionStatus } from "@/generated/prisma/client"
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
@@ -19,6 +19,22 @@ export type TeamWithMemberCount = Team & {
 export type TeamDetails = Team & {
   members: TeamMember[]
   _count: { members: number; events: number }
+}
+
+// ── getTeamSubscriptionStatus ────────────────────────────────────────────────────
+
+/**
+ * Estado de la suscripción del equipo, o null si el super admin todavía no la
+ * configuró (RF-56). Usado por el layout del equipo para el banner de modo
+ * solo-lectura y por las páginas para ocultar los controles de crear/editar/
+ * eliminar cuando está SUSPENDED.
+ */
+export async function getTeamSubscriptionStatus(teamId: string): Promise<SubscriptionStatus | null> {
+  const subscription = await prisma.subscription.findUnique({
+    where: { teamId },
+    select: { status: true },
+  })
+  return subscription?.status ?? null
 }
 
 // ── createTeam ────────────────────────────────────────────────────────────────
