@@ -53,7 +53,8 @@ export async function DELETE(_req: Request, { params }: RouteParams) {
     const status =
       result.code === "NOT_CAPITANA" ||
       result.code === "SELF_ACTION_FORBIDDEN" ||
-      result.code === "SUBSCRIPTION_SUSPENDED"
+      result.code === "SUBSCRIPTION_SUSPENDED" ||
+      result.code === "TRIAL_EXPIRED"
         ? 403
         : 500
     return NextResponse.json({ success: false, error: result.error }, { status })

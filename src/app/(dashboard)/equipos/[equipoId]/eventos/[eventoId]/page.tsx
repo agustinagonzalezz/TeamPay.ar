@@ -11,7 +11,7 @@ import { notFound, redirect } from "next/navigation"
 import { ArrowLeft, Copy, Pencil } from "lucide-react"
 import { getCurrentUser } from "@/lib/auth"
 import { getEventoById, checkIsCapitana } from "@/services/eventoService"
-import { getTeamSubscriptionStatus } from "@/services/teamService"
+import { requireTeamWriteAccess } from "@/lib/auth/team-access"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { buttonVariants } from "@/components/ui/button"
 import { ParticipantRow } from "@/components/eventos/ParticipantRow"
@@ -33,17 +33,17 @@ export default async function EventoPage({
   const user = await getCurrentUser()
   if (!user) redirect("/login")
 
-  const [result, isCapitana, subscriptionStatus] = await Promise.all([
+  const [result, isCapitana, writeAccess] = await Promise.all([
     getEventoById(eventoId, equipoId, user.id),
     checkIsCapitana(equipoId, user.id),
-    getTeamSubscriptionStatus(equipoId),
+    requireTeamWriteAccess(equipoId),
   ])
 
   if (!result.success) notFound()
 
   const evento = result.data
   // RF-56: en modo solo-lectura no se muestran los controles de crear/editar/eliminar
-  const puedeEscribir = subscriptionStatus !== "SUSPENDED"
+  const puedeEscribir = writeAccess.authorized
 
   // Estadísticas de pagos
   const total = evento.participants.length

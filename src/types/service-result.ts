@@ -10,5 +10,6 @@
 export type ServiceErrorCode =
   | "NOT_CAPITANA"
   | "SUBSCRIPTION_SUSPENDED"
+  | "TRIAL_EXPIRED"
   | "SELF_ACTION_FORBIDDEN"
   | "CONFLICT"

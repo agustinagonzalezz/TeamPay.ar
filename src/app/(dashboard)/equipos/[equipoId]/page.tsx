@@ -4,7 +4,8 @@ import Image from "next/image"
 import { notFound, redirect } from "next/navigation"
 import { ArrowLeft, Plus, TrendingUp, Settings } from "lucide-react"
 import { getCurrentUser } from "@/lib/auth"
-import { getTeamDetails, getTeamSubscriptionStatus } from "@/services/teamService"
+import { getTeamDetails } from "@/services/teamService"
+import { requireTeamWriteAccess } from "@/lib/auth/team-access"
 import { getEventosByTeam, checkIsCapitana } from "@/services/eventoService"
 import { getGastosByTeam } from "@/services/gastoService"
 import { EventoCard } from "@/components/eventos/EventoCard"
@@ -51,12 +52,12 @@ export default async function EquipoPage({
   const user = await getCurrentUser()
   if (!user) redirect("/login")
 
-  const [teamResult, eventosResult, gastosResult, esCapitana, subscriptionStatus] = await Promise.all([
+  const [teamResult, eventosResult, gastosResult, esCapitana, writeAccess] = await Promise.all([
     getTeamDetails(equipoId, user.id),
     getEventosByTeam(equipoId, user.id),
     getGastosByTeam(equipoId, user.id),
     checkIsCapitana(equipoId, user.id),
-    getTeamSubscriptionStatus(equipoId),
+    requireTeamWriteAccess(equipoId),
   ])
 
   if (!teamResult.success) notFound()
@@ -66,7 +67,7 @@ export default async function EquipoPage({
   const gastos = gastosResult.success ? gastosResult.data : []
   const totalGastos = gastos.reduce((acc, g) => acc + Number(g.amount), 0)
   // RF-56: en modo solo-lectura no se muestran los accesos directos a crear/editar
-  const puedeEscribir = subscriptionStatus !== "SUSPENDED"
+  const puedeEscribir = writeAccess.authorized
 
   const AVATARS_VISIBLE = 9
 

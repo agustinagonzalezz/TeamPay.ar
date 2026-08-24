@@ -4,7 +4,7 @@
 
 import { prisma } from "@/lib/prisma"
 import type { CreateTeamInput, UpdateTeamInput } from "@/lib/validations/team"
-import type { Team, TeamMember, SubscriptionStatus } from "@/generated/prisma/client"
+import type { Team, TeamMember } from "@/generated/prisma/client"
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
@@ -21,22 +21,6 @@ export type TeamDetails = Team & {
   _count: { members: number; events: number }
 }
 
-// ── getTeamSubscriptionStatus ────────────────────────────────────────────────────
-
-/**
- * Estado de la suscripción del equipo, o null si el super admin todavía no la
- * configuró (RF-56). Usado por el layout del equipo para el banner de modo
- * solo-lectura y por las páginas para ocultar los controles de crear/editar/
- * eliminar cuando está SUSPENDED.
- */
-export async function getTeamSubscriptionStatus(teamId: string): Promise<SubscriptionStatus | null> {
-  const subscription = await prisma.subscription.findUnique({
-    where: { teamId },
-    select: { status: true },
-  })
-  return subscription?.status ?? null
-}
-
 // ── createTeam ────────────────────────────────────────────────────────────────
 
 export async function createTeam(
@@ -51,8 +35,15 @@ export async function createTeam(
 
     const owner = await prisma.user.findUnique({
       where: { id: userId },
-      select: { name: true },
+      select: { name: true, email: true },
     })
+
+    // Trial automático de 14 días — cierra el agujero de equipos que operaban
+    // gratis para siempre por no tener Subscription. contactName/contactEmail
+    // arrancan con los datos de la capitana hasta que el super admin cargue un
+    // contacto comercial distinto desde /admin.
+    const trialEndsAt = new Date()
+    trialEndsAt.setDate(trialEndsAt.getDate() + 14)
 
     const team = await prisma.team.create({
       data: {
@@ -66,6 +57,15 @@ export async function createTeam(
             userId,
             name: owner?.name ?? "Capitana",
             status: "ACTIVA",
+          },
+        },
+        subscription: {
+          create: {
+            status: "TRIALING",
+            plan: "TRIAL",
+            trialEndsAt,
+            contactName: owner?.name ?? "Capitana",
+            contactEmail: owner?.email ?? "",
           },
         },
       },

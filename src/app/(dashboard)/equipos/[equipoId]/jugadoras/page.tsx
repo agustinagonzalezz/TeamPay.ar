@@ -11,7 +11,8 @@ import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
 import { getCurrentUser } from "@/lib/auth"
-import { getTeamById, getTeamSubscriptionStatus } from "@/services/teamService"
+import { getTeamById } from "@/services/teamService"
+import { requireTeamWriteAccess } from "@/lib/auth/team-access"
 import {
   getJugadorasByTeam,
   type JugadorasEstado,
@@ -59,8 +60,8 @@ export default async function JugadorasPage({
   const esCapitanaPrincipal = equipo.ownerId === user.id  // solo el owner puede gestionar co-capitanas
 
   // RF-56: en modo solo-lectura no se muestran los controles de crear/editar/eliminar
-  const subscriptionStatus = await getTeamSubscriptionStatus(equipoId)
-  const puedeEscribir = subscriptionStatus !== "SUSPENDED"
+  const writeAccess = await requireTeamWriteAccess(equipoId)
+  const puedeEscribir = writeAccess.authorized
 
   // Obtener jugadoras
   const jugadorasResult = await getJugadorasByTeam(equipoId, user.id, { search: q, orden, estado })

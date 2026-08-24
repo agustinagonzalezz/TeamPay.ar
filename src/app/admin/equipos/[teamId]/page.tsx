@@ -54,6 +54,20 @@ export default async function AdminEquipoDetailPage({
         <p className="mt-1 text-sm text-muted-foreground">
           Alta {formatDate(equipo.createdAt)} · Capitana: {equipo.owner.name ?? equipo.owner.email} ({equipo.owner.email})
         </p>
+        {subscription?.trialEndsAt && (
+          <p
+            className={cn(
+              "mt-1 text-sm",
+              subscription.trialEndsAt < new Date()
+                ? "font-medium text-destructive"
+                : "text-muted-foreground"
+            )}
+          >
+            Trial {subscription.trialEndsAt < new Date() ? "venció" : "vence"} el{" "}
+            {formatDate(subscription.trialEndsAt)}
+            {subscription.status === "TRIALING" && subscription.trialEndsAt < new Date() && " — modo solo-lectura activo"}
+          </p>
+        )}
       </div>
 
       {esPropioEquipo && (

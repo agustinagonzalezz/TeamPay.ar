@@ -3,7 +3,7 @@ import { redirect } from "next/navigation"
 import { getCurrentUser } from "@/lib/auth"
 import { getJugadorasByTeam } from "@/services/jugadoraService"
 import { getEventoForDuplication } from "@/services/eventoService"
-import { getTeamSubscriptionStatus } from "@/services/teamService"
+import { requireTeamWriteAccess, TEAM_WRITE_ACCESS_MESSAGES } from "@/lib/auth/team-access"
 import { NuevoEventoForm } from "@/components/eventos/NuevoEventoForm"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -31,13 +31,13 @@ export default async function NuevoEventoPage({
   const user = await getCurrentUser()
   if (!user) redirect("/login")
 
-  // RF-56: bloquear el acceso directo al formulario si la cuenta está suspendida
-  const subscriptionStatus = await getTeamSubscriptionStatus(equipoId)
-  if (subscriptionStatus === "SUSPENDED") {
+  // RF-56: bloquear el acceso directo al formulario en modo solo-lectura
+  const writeAccess = await requireTeamWriteAccess(equipoId)
+  if (!writeAccess.authorized) {
     return (
       <div className="rounded-xl border border-dashed py-12 text-center">
         <p className="text-sm text-muted-foreground">
-          Esta cuenta está suspendida — no se pueden crear eventos hasta regularizar el pago.
+          {TEAM_WRITE_ACCESS_MESSAGES[writeAccess.reason]}
         </p>
         <Link
           href={`/equipos/${equipoId}`}

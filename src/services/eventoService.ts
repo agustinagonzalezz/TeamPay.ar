@@ -6,7 +6,7 @@
  */
 
 import { prisma } from "@/lib/prisma"
-import { requireTeamWriteAccess, SUBSCRIPTION_SUSPENDED_MESSAGE } from "@/lib/auth/team-access"
+import { requireTeamWriteAccess, TEAM_WRITE_ACCESS_MESSAGES } from "@/lib/auth/team-access"
 import type { ServiceErrorCode } from "@/types/service-result"
 import type { CreateEventoInput, UpdateEventoInput } from "@/lib/validations/evento"
 import type {
@@ -75,7 +75,7 @@ export async function createEvento(
 
     const writeAccess = await requireTeamWriteAccess(teamId)
     if (!writeAccess.authorized) {
-      return { success: false, error: SUBSCRIPTION_SUSPENDED_MESSAGE, code: writeAccess.reason }
+      return { success: false, error: TEAM_WRITE_ACCESS_MESSAGES[writeAccess.reason], code: writeAccess.reason }
     }
 
     // Obtener jugadoras activas para generar los participantes
@@ -237,7 +237,7 @@ export async function updateEvento(
 
     const writeAccess = await requireTeamWriteAccess(teamId)
     if (!writeAccess.authorized) {
-      return { success: false, error: SUBSCRIPTION_SUSPENDED_MESSAGE, code: writeAccess.reason }
+      return { success: false, error: TEAM_WRITE_ACCESS_MESSAGES[writeAccess.reason], code: writeAccess.reason }
     }
 
     const evento = await prisma.event.findFirst({ where: { id: eventoId, teamId } })
@@ -297,7 +297,7 @@ export async function deleteEvento(
 
     const writeAccess = await requireTeamWriteAccess(teamId)
     if (!writeAccess.authorized) {
-      return { success: false, error: SUBSCRIPTION_SUSPENDED_MESSAGE, code: writeAccess.reason }
+      return { success: false, error: TEAM_WRITE_ACCESS_MESSAGES[writeAccess.reason], code: writeAccess.reason }
     }
 
     const evento = await prisma.event.findFirst({ where: { id: eventoId, teamId } })
@@ -406,7 +406,7 @@ export async function updateParticipantStatus(
 
     const writeAccess = await requireTeamWriteAccess(teamId)
     if (!writeAccess.authorized) {
-      return { success: false, error: SUBSCRIPTION_SUSPENDED_MESSAGE, code: writeAccess.reason }
+      return { success: false, error: TEAM_WRITE_ACCESS_MESSAGES[writeAccess.reason], code: writeAccess.reason }
     }
 
     const participant = await prisma.eventParticipant.findUnique({
@@ -483,7 +483,7 @@ export async function updateParticipantCustomAmount(
 
     const writeAccess = await requireTeamWriteAccess(teamId)
     if (!writeAccess.authorized) {
-      return { success: false, error: SUBSCRIPTION_SUSPENDED_MESSAGE, code: writeAccess.reason }
+      return { success: false, error: TEAM_WRITE_ACCESS_MESSAGES[writeAccess.reason], code: writeAccess.reason }
     }
 
     const participant = await prisma.eventParticipant.findUnique({
@@ -525,7 +525,7 @@ export async function closeEvento(
 
     const writeAccess = await requireTeamWriteAccess(teamId)
     if (!writeAccess.authorized) {
-      return { success: false, error: SUBSCRIPTION_SUSPENDED_MESSAGE, code: writeAccess.reason }
+      return { success: false, error: TEAM_WRITE_ACCESS_MESSAGES[writeAccess.reason], code: writeAccess.reason }
     }
 
     const evento = await prisma.event.findFirst({ where: { id: eventoId, teamId } })

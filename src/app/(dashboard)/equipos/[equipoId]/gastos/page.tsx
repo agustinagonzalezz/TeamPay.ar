@@ -10,7 +10,8 @@ import { notFound, redirect } from "next/navigation"
 import { ArrowLeft, Receipt } from "lucide-react"
 import { getCurrentUser } from "@/lib/auth"
 import { getGastosByTeam } from "@/services/gastoService"
-import { getTeamById, getTeamSubscriptionStatus } from "@/services/teamService"
+import { getTeamById } from "@/services/teamService"
+import { requireTeamWriteAccess } from "@/lib/auth/team-access"
 import { GastoForm } from "@/components/gastos/GastoForm"
 import { DeleteGastoButton } from "@/components/gastos/DeleteGastoButton"
 import { EditGastoButton } from "@/components/gastos/EditGastoButton"
@@ -32,10 +33,10 @@ export default async function GastosPage({
   const user = await getCurrentUser()
   if (!user) redirect("/login")
 
-  const [teamResult, gastosResult, subscriptionStatus] = await Promise.all([
+  const [teamResult, gastosResult, writeAccess] = await Promise.all([
     getTeamById(equipoId, user.id),
     getGastosByTeam(equipoId, user.id),
-    getTeamSubscriptionStatus(equipoId),
+    requireTeamWriteAccess(equipoId),
   ])
 
   if (!teamResult.success) notFound()
@@ -44,7 +45,7 @@ export default async function GastosPage({
   const esCapitana = equipo.ownerId === user.id
   const gastos = gastosResult.success ? gastosResult.data : []
   // RF-56: en modo solo-lectura no se muestran los controles de crear/editar/eliminar
-  const puedeEscribir = subscriptionStatus !== "SUSPENDED"
+  const puedeEscribir = writeAccess.authorized
 
   const totalGastos = gastos.reduce((acc, g) => acc + Number(g.amount), 0)
 

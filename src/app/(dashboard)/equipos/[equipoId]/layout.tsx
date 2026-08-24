@@ -10,7 +10,8 @@
 import type { CSSProperties } from "react"
 import { notFound, redirect } from "next/navigation"
 import { getCurrentUser } from "@/lib/auth"
-import { getTeamById, getTeamSubscriptionStatus } from "@/services/teamService"
+import { getTeamById } from "@/services/teamService"
+import { requireTeamWriteAccess } from "@/lib/auth/team-access"
 import { getContrastForeground } from "@/lib/color"
 import { SuspendedBanner } from "@/components/shared/SuspendedBanner"
 
@@ -31,15 +32,14 @@ export default async function EquipoLayout({
 
   const { primaryColor, secondaryColor } = teamResult.data
 
-  // RF-56b: leído fresco en cada request, igual que isSuperAdmin — al
-  // reactivarse (RF-56c) el banner desaparece sin que nadie tenga que
-  // volver a loguearse.
-  const subscriptionStatus = await getTeamSubscriptionStatus(equipoId)
-  const isSuspended = subscriptionStatus === "SUSPENDED"
+  // RF-56b/RF-59bis: leído fresco en cada request, igual que isSuperAdmin —
+  // al reactivarse (RF-56c) o al cargar un precio y pasar a ACTIVE, el
+  // banner desaparece sin que nadie tenga que volver a loguearse.
+  const writeAccess = await requireTeamWriteAccess(equipoId)
 
   const content = (
     <>
-      {isSuspended && <SuspendedBanner />}
+      {!writeAccess.authorized && <SuspendedBanner reason={writeAccess.reason} />}
       {children}
     </>
   )

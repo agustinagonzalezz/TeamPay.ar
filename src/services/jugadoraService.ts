@@ -9,7 +9,7 @@ import { prisma } from "@/lib/prisma"
 import type { AddJugadoraInput, UpdateJugadoraInput } from "@/lib/validations/jugadora"
 import type { TeamMember } from "@/generated/prisma/client"
 import { Prisma } from "@/generated/prisma/client"
-import { requireTeamWriteAccess, SUBSCRIPTION_SUSPENDED_MESSAGE } from "@/lib/auth/team-access"
+import { requireTeamWriteAccess, TEAM_WRITE_ACCESS_MESSAGES } from "@/lib/auth/team-access"
 import type { ServiceErrorCode } from "@/types/service-result"
 
 type ServiceResult<T> =
@@ -111,7 +111,7 @@ export async function addJugadora(
 
     const writeAccess = await requireTeamWriteAccess(teamId)
     if (!writeAccess.authorized) {
-      return { success: false, error: SUBSCRIPTION_SUSPENDED_MESSAGE, code: writeAccess.reason }
+      return { success: false, error: TEAM_WRITE_ACCESS_MESSAGES[writeAccess.reason], code: writeAccess.reason }
     }
 
     const jugadora = await prisma.teamMember.create({
@@ -279,7 +279,7 @@ export async function setCoCapitana(
 
     const writeAccess = await requireTeamWriteAccess(teamId)
     if (!writeAccess.authorized) {
-      return { success: false, error: SUBSCRIPTION_SUSPENDED_MESSAGE, code: writeAccess.reason }
+      return { success: false, error: TEAM_WRITE_ACCESS_MESSAGES[writeAccess.reason], code: writeAccess.reason }
     }
 
     const member = await prisma.teamMember.findFirst({
@@ -323,7 +323,7 @@ export async function updateJugadora(
 
     const writeAccess = await requireTeamWriteAccess(teamId)
     if (!writeAccess.authorized) {
-      return { success: false, error: SUBSCRIPTION_SUSPENDED_MESSAGE, code: writeAccess.reason }
+      return { success: false, error: TEAM_WRITE_ACCESS_MESSAGES[writeAccess.reason], code: writeAccess.reason }
     }
 
     const member = await prisma.teamMember.findFirst({ where: { id: jugadoraId, teamId } })
@@ -359,7 +359,7 @@ export async function removeJugadora(
 
     const writeAccess = await requireTeamWriteAccess(teamId)
     if (!writeAccess.authorized) {
-      return { success: false, error: SUBSCRIPTION_SUSPENDED_MESSAGE, code: writeAccess.reason }
+      return { success: false, error: TEAM_WRITE_ACCESS_MESSAGES[writeAccess.reason], code: writeAccess.reason }
     }
 
     // No permitir que la capitana se dé de baja a sí misma

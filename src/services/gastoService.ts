@@ -7,7 +7,7 @@
  */
 
 import { prisma } from "@/lib/prisma"
-import { requireTeamWriteAccess, SUBSCRIPTION_SUSPENDED_MESSAGE } from "@/lib/auth/team-access"
+import { requireTeamWriteAccess, TEAM_WRITE_ACCESS_MESSAGES } from "@/lib/auth/team-access"
 import type { CreateGastoInput } from "@/lib/validations/gasto"
 import type { Expense } from "@/generated/prisma/client"
 import type { ServiceErrorCode } from "@/types/service-result"
@@ -46,7 +46,7 @@ export async function createGasto(
 
     const writeAccess = await requireTeamWriteAccess(teamId)
     if (!writeAccess.authorized) {
-      return { success: false, error: SUBSCRIPTION_SUSPENDED_MESSAGE, code: writeAccess.reason }
+      return { success: false, error: TEAM_WRITE_ACCESS_MESSAGES[writeAccess.reason], code: writeAccess.reason }
     }
 
     const gasto = await prisma.expense.create({
@@ -113,7 +113,7 @@ export async function updateGasto(
 
     const writeAccess = await requireTeamWriteAccess(teamId)
     if (!writeAccess.authorized) {
-      return { success: false, error: SUBSCRIPTION_SUSPENDED_MESSAGE, code: writeAccess.reason }
+      return { success: false, error: TEAM_WRITE_ACCESS_MESSAGES[writeAccess.reason], code: writeAccess.reason }
     }
 
     const gasto = await prisma.expense.findFirst({ where: { id: gastoId, teamId } })
@@ -154,7 +154,7 @@ export async function deleteGasto(
 
     const writeAccess = await requireTeamWriteAccess(teamId)
     if (!writeAccess.authorized) {
-      return { success: false, error: SUBSCRIPTION_SUSPENDED_MESSAGE, code: writeAccess.reason }
+      return { success: false, error: TEAM_WRITE_ACCESS_MESSAGES[writeAccess.reason], code: writeAccess.reason }
     }
 
     // Verificar que el gasto pertenece al equipo

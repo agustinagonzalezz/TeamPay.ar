@@ -57,7 +57,12 @@ export async function POST(req: Request, { params }: RouteParams) {
   const result = await addJugadora(equipoId, parsed.data, user.id)
 
   if (!result.success) {
-    const status = result.code === "NOT_CAPITANA" || result.code === "SUBSCRIPTION_SUSPENDED" ? 403 : 500
+    const status =
+      result.code === "NOT_CAPITANA" ||
+      result.code === "SUBSCRIPTION_SUSPENDED" ||
+      result.code === "TRIAL_EXPIRED"
+        ? 403
+        : 500
     return NextResponse.json({ success: false, error: result.error }, { status })
   }
 
