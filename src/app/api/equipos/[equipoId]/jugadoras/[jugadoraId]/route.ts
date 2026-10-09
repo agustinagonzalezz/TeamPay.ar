@@ -9,6 +9,7 @@ import { z } from "zod"
 import { getCurrentUser } from "@/lib/auth"
 import { removeJugadora, updateJugadora, setCoCapitana } from "@/services/jugadoraService"
 import { updateJugadoraSchema } from "@/lib/validations/jugadora"
+import { statusFromServiceCode } from "@/lib/api/service-status"
 
 type RouteParams = { params: Promise<{ equipoId: string; jugadoraId: string }> }
 
@@ -50,13 +51,7 @@ export async function DELETE(_req: Request, { params }: RouteParams) {
   const result = await removeJugadora(jugadoraId, equipoId, user.id)
 
   if (!result.success) {
-    const status =
-      result.code === "NOT_CAPITANA" ||
-      result.code === "SELF_ACTION_FORBIDDEN" ||
-      result.code === "SUBSCRIPTION_SUSPENDED" ||
-      result.code === "TRIAL_EXPIRED"
-        ? 403
-        : 500
+    const status = statusFromServiceCode(result.code, 500)
     return NextResponse.json({ success: false, error: result.error }, { status })
   }
 

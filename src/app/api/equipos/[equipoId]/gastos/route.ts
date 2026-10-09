@@ -8,6 +8,7 @@
 import { getCurrentUser } from "@/lib/auth"
 import { createGasto, getGastosByTeam } from "@/services/gastoService"
 import { createGastoSchema } from "@/lib/validations/gasto"
+import { statusFromServiceCode } from "@/lib/api/service-status"
 
 export async function GET(
   _req: Request,
@@ -55,7 +56,8 @@ export async function POST(
   const result = await createGasto(equipoId, parsed.data, user.id)
 
   if (!result.success) {
-    return Response.json({ success: false, error: result.error }, { status: 400 })
+    const status = statusFromServiceCode(result.code)
+    return Response.json({ success: false, error: result.error }, { status })
   }
 
   return Response.json({ success: true, data: result.data }, { status: 201 })

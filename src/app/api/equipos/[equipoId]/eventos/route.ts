@@ -9,6 +9,7 @@ import { NextResponse } from "next/server"
 import { getCurrentUser } from "@/lib/auth"
 import { getEventosByTeam, createEvento } from "@/services/eventoService"
 import { createEventoSchema } from "@/lib/validations/evento"
+import { statusFromServiceCode } from "@/lib/api/service-status"
 
 type RouteParams = { params: Promise<{ equipoId: string }> }
 
@@ -48,12 +49,7 @@ export async function POST(req: Request, { params }: RouteParams) {
   const result = await createEvento(equipoId, parsed.data, user.id)
 
   if (!result.success) {
-    const status =
-      result.code === "NOT_CAPITANA" ||
-      result.code === "SUBSCRIPTION_SUSPENDED" ||
-      result.code === "TRIAL_EXPIRED"
-        ? 403
-        : 500
+    const status = statusFromServiceCode(result.code, 500)
     return NextResponse.json({ success: false, error: result.error }, { status })
   }
 

@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { getCurrentUser } from "@/lib/auth"
 import { updateParticipantStatus, updateParticipantCustomAmount } from "@/services/eventoService"
+import { statusFromServiceCode } from "@/lib/api/service-status"
 
 type Params = { params: Promise<{ equipoId: string; eventoId: string; participanteId: string }> }
 
@@ -34,7 +35,7 @@ export async function PATCH(req: Request, { params }: Params) {
     const result = await updateParticipantStatus(
       participanteId, equipoId, data.status, user.id, data.paidAmount, data.medioPago
     )
-    if (!result.success) return Response.json(result, { status: 400 })
+    if (!result.success) return Response.json(result, { status: statusFromServiceCode(result.code) })
     return Response.json({ success: true, data: result.data })
   }
 
@@ -42,6 +43,6 @@ export async function PATCH(req: Request, { params }: Params) {
   const result = await updateParticipantCustomAmount(
     participanteId, equipoId, data.customAmount, user.id
   )
-  if (!result.success) return Response.json(result, { status: 400 })
+  if (!result.success) return Response.json(result, { status: statusFromServiceCode(result.code) })
   return Response.json({ success: true, data: result.data })
 }

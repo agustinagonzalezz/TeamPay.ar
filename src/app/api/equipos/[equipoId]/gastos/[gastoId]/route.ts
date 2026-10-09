@@ -2,6 +2,7 @@ import { NextRequest } from "next/server"
 import { getCurrentUser } from "@/lib/auth"
 import { createGastoSchema } from "@/lib/validations/gasto"
 import { deleteGasto, updateGasto } from "@/services/gastoService"
+import { statusFromServiceCode } from "@/lib/api/service-status"
 
 type Params = { params: Promise<{ equipoId: string; gastoId: string }> }
 
@@ -17,7 +18,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   }
 
   const result = await updateGasto(gastoId, equipoId, parsed.data, user.id)
-  if (!result.success) return Response.json(result, { status: 403 })
+  if (!result.success) return Response.json(result, { status: statusFromServiceCode(result.code, 403) })
   return Response.json(result)
 }
 
@@ -30,6 +31,9 @@ export async function DELETE(
 
   const { equipoId, gastoId } = await params
   const result = await deleteGasto(gastoId, equipoId, user.id)
-  if (!result.success) return Response.json({ success: false, error: result.error }, { status: 400 })
+  if (!result.success) {
+    const status = statusFromServiceCode(result.code)
+    return Response.json({ success: false, error: result.error }, { status })
+  }
   return Response.json({ success: true, data: result.data })
 }
